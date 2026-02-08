@@ -708,6 +708,139 @@ Some content without H1.`,
 	}
 }
 
+func TestFrontmatterSpacingIdempotent(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Create a test file with H1 title
+	testFile := filepath.Join(tempDir, "test.md")
+	originalContent := `# Test Document
+
+This is the content.`
+	if err := os.WriteFile(testFile, []byte(originalContent), 0o600); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	fm := &parser.Frontmatter{
+		Title:       "Test Document",
+		Description: "A test description",
+		Tags:        []string{"test", "example"},
+	}
+
+	// First write
+	if err := parser.WriteFrontmatter(testFile, fm, originalContent, false); err != nil {
+		t.Fatalf("First WriteFrontmatter failed: %v", err)
+	}
+
+	content1, err := os.ReadFile(testFile)
+	if err != nil {
+		t.Fatalf("Failed to read file after first write: %v", err)
+	}
+
+	// Extract body and write again (simulates running --force twice)
+	_, body, err := parser.ExtractFrontmatter(testFile)
+	if err != nil {
+		t.Fatalf("ExtractFrontmatter failed: %v", err)
+	}
+
+	if err := parser.WriteFrontmatter(testFile, fm, body, false); err != nil {
+		t.Fatalf("Second WriteFrontmatter failed: %v", err)
+	}
+
+	content2, err := os.ReadFile(testFile)
+	if err != nil {
+		t.Fatalf("Failed to read file after second write: %v", err)
+	}
+
+	// Content should be identical after second write
+	if !bytes.Equal(content1, content2) {
+		t.Error("Content changed after second WriteFrontmatter - should be idempotent")
+		t.Logf("After first write:\n%s", string(content1))
+		t.Logf("After second write:\n%s", string(content2))
+	}
+
+	// Verify exactly one empty line between frontmatter and H1
+	// The file should contain "---\n\n#" (closing delimiter, one empty line, H1)
+	contentStr := string(content2)
+	if !strings.Contains(contentStr, "---\n\n#") {
+		t.Error("Expected exactly one empty line between frontmatter and H1")
+		t.Logf("Content:\n%s", contentStr)
+	}
+	// And should NOT have two empty lines
+	if strings.Contains(contentStr, "---\n\n\n") {
+		t.Error("Found more than one empty line between frontmatter and content")
+		t.Logf("Content:\n%s", contentStr)
+	}
+}
+
+func TestFrontmatterSpacingWithExistingNewlines(t *testing.T) {
+	tempDir := t.TempDir()
+
+	testCases := []struct {
+		name         string
+		body         string
+		expectedBody string
+	}{
+		{
+			name:         "no_leading_newlines",
+			body:         "# Title\n\nContent",
+			expectedBody: "# Title\n\nContent",
+		},
+		{
+			name:         "one_leading_newline",
+			body:         "\n# Title\n\nContent",
+			expectedBody: "# Title\n\nContent",
+		},
+		{
+			name:         "multiple_leading_newlines",
+			body:         "\n\n\n# Title\n\nContent",
+			expectedBody: "# Title\n\nContent",
+		},
+		{
+			name:         "leading_spaces_and_newlines",
+			body:         "  \n\n# Title\n\nContent",
+			expectedBody: "# Title\n\nContent",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			testFile := filepath.Join(tempDir, tc.name+".md")
+
+			fm := &parser.Frontmatter{
+				Title:       "Title",
+				Description: "Description",
+			}
+
+			if err := parser.WriteFrontmatter(testFile, fm, tc.body, false); err != nil {
+				t.Fatalf("WriteFrontmatter failed: %v", err)
+			}
+
+			content, err := os.ReadFile(testFile)
+			if err != nil {
+				t.Fatalf("Failed to read file: %v", err)
+			}
+
+			// Extract body from written content
+			_, extractedBody, err := parser.ExtractFrontmatter(testFile)
+			if err != nil {
+				t.Fatalf("ExtractFrontmatter failed: %v", err)
+			}
+
+			// Body should match expected (trimmed)
+			if extractedBody != tc.expectedBody {
+				t.Errorf("Expected body:\n%q\nGot:\n%q", tc.expectedBody, extractedBody)
+			}
+
+			// Verify spacing in raw content
+			contentStr := string(content)
+			if !strings.Contains(contentStr, "---\n\n# Title") {
+				t.Error("Expected exactly one empty line between frontmatter and H1")
+				t.Logf("Content:\n%s", contentStr)
+			}
+		})
+	}
+}
+
 func TestSummaryParsing(t *testing.T) {
 	tempDir := t.TempDir()
 

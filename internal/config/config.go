@@ -56,9 +56,9 @@ func DefaultConfig() *Config {
 		Output: OutputConfig{
 			LLMsTxt:  "llms.txt",
 			LLMsFull: "docs/llms-full.txt",
-			Manifest: "docs/ai-optimization/manifest.json",
-			Tags:     "docs/ai-optimization/tags.json",
-			Cache:    "docs/ai-optimization/.cache.json",
+			Manifest: "docs/_ai/manifest.json",
+			Tags:     "docs/_ai/tags.json",
+			Cache:    "docs/_ai/.cache.json",
 		},
 		AI: AIConfig{
 			Enabled:                    false,

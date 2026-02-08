@@ -138,10 +138,12 @@ func WriteLLMsTxt(path string, docs []*Document, cfg *config.Config, dryRun bool
 	llmsDir := filepath.Dir(path)
 
 	manifestRel, _ := filepath.Rel(llmsDir, cfg.Output.Manifest)
+	tagsRel, _ := filepath.Rel(llmsDir, cfg.Output.Tags)
 	llmsFullRel, _ := filepath.Rel(llmsDir, cfg.Output.LLMsFull)
 
 	lines = append(lines,
 		"- Pattern Manifest: /"+manifestRel,
+		"- Tags Index: /"+tagsRel,
 		"- Full Index: /"+llmsFullRel,
 		"",
 		"## Documentation",

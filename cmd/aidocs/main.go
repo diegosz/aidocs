@@ -210,8 +210,32 @@ func run() error {
 		}
 	}
 
+	// Create .gitignore in output directory to ignore cache file
+	if !*dryRun {
+		if err := createOutputGitignore(cfg.Output.Cache); err != nil && *verbose {
+			fmt.Printf("Warning: could not create .gitignore: %v\n", err)
+		}
+	}
+
 	fmt.Println("Done!")
 	return nil
+}
+
+// createOutputGitignore creates a .gitignore file in the output directory
+// to ignore the cache file.
+func createOutputGitignore(cachePath string) error {
+	dir := filepath.Dir(cachePath)
+	gitignorePath := filepath.Join(dir, ".gitignore")
+
+	// Only create if it doesn't exist
+	if _, err := os.Stat(gitignorePath); err == nil {
+		return nil
+	}
+
+	cacheFile := filepath.Base(cachePath)
+	content := fmt.Sprintf("# aidocs cache (auto-generated)\n%s\n", cacheFile)
+
+	return os.WriteFile(gitignorePath, []byte(content), 0o600)
 }
 
 func createDefaultConfig() error {
@@ -225,9 +249,9 @@ content: "docs/SUMMARY.md"
 output:
   llms_txt: "llms.txt"                    # Root navigation (auto-generated if missing)
   llms_full: "docs/llms-full.txt"         # Complete index
-  manifest: "docs/ai-optimization/manifest.json"
-  tags: "docs/ai-optimization/tags.json"  # Aggregated tags index
-  cache: "docs/ai-optimization/.cache.json"
+  manifest: "docs/_ai/manifest.json"
+  tags: "docs/_ai/tags.json"              # Aggregated tags index
+  cache: "docs/_ai/.cache.json"
 
 # AI features (uses Claude Code CLI - no API key needed)
 ai:

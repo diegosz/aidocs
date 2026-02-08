@@ -4,7 +4,8 @@
 
 ## For AI Agents
 
-- Pattern Manifest: /docs/ai-optimization/manifest.json
+- Pattern Manifest: /docs/_ai/manifest.json
+- Tags Index: /docs/_ai/tags.json
 - Full Index: /docs/llms-full.txt
 
 ## Documentation

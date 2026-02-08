@@ -47,9 +47,8 @@ func ExtractFrontmatter(path string) (*Frontmatter, string, error) {
 			if err := yaml.Unmarshal(fmContent, fm); err != nil {
 				return nil, "", err
 			}
-			// Body is everything after the closing ---
-			body = strings.TrimPrefix(string(bodyContent), "\n")
-			body = strings.TrimPrefix(body, "\r\n")
+			// Body is everything after the closing ---, trimmed of leading whitespace
+			body = strings.TrimLeft(string(bodyContent), "\n\r\t ")
 		}
 	}
 
@@ -82,6 +81,7 @@ func extractH1Title(content string) string {
 }
 
 // WriteFrontmatter writes/updates frontmatter in a markdown file.
+// Ensures exactly one empty line between frontmatter and H1 title.
 func WriteFrontmatter(path string, fm *Frontmatter, body string, dryRun bool) error {
 	if dryRun {
 		return nil
@@ -93,7 +93,10 @@ func WriteFrontmatter(path string, fm *Frontmatter, body string, dryRun bool) er
 		return err
 	}
 
-	// Combine frontmatter and body
+	// Trim leading whitespace from body to ensure consistent spacing
+	body = strings.TrimLeft(body, "\n\r\t ")
+
+	// Combine frontmatter and body with exactly one empty line
 	var buf bytes.Buffer
 	buf.WriteString("---\n")
 	buf.Write(fmBytes)
@@ -117,8 +120,7 @@ func StripFrontmatter(content []byte) []byte {
 		return content
 	}
 
-	// Return everything after the closing ---
-	body = bytes.TrimPrefix(body, []byte("\n"))
-	body = bytes.TrimPrefix(body, []byte("\r\n"))
+	// Return everything after the closing ---, trimmed of leading whitespace
+	body = bytes.TrimLeft(body, "\n\r\t ")
 	return body
 }

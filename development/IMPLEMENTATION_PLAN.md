@@ -19,10 +19,11 @@ CONFIG                          TOOL                       OUTPUT FILES
   │                                │      │
   └─ content: docs/SUMMARY.md      │      ├───────────→ docs/llms-full.txt
                                    │      │
-                                   ▼      └───────────→ docs/ai-optimization/
+                                   ▼      └───────────→ docs/_ai/
                             Claude Code CLI                ├── manifest.json
                             (claude -p)                    ├── tags.json
-                                                           └── .cache.json
+                                                           ├── .cache.json
+                                                           └── .gitignore (ignores .cache.json)
 
 SOURCE FILES (referenced by SUMMARY.md)
 
@@ -61,9 +62,9 @@ content: "docs/SUMMARY.md"
 output:
   llms_txt: "llms.txt"                    # Root navigation (auto-generated if missing)
   llms_full: "docs/llms-full.txt"         # Complete index
-  manifest: "docs/ai-optimization/manifest.json"
-  tags: "docs/ai-optimization/tags.json"  # Aggregated tags index
-  cache: "docs/ai-optimization/.cache.json"
+  manifest: "docs/_ai/manifest.json"
+  tags: "docs/_ai/tags.json"              # Aggregated tags index
+  cache: "docs/_ai/.cache.json"
 
 # AI features (uses Claude Code CLI - no API key needed)
 ai:
@@ -198,7 +199,8 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
 > {project.description}
 
 ## For AI Agents
-- Pattern Manifest: /docs/ai-optimization/manifest.json
+- Pattern Manifest: /docs/_ai/manifest.json
+- Tags Index: /docs/_ai/tags.json
 - Full Index: /docs/llms-full.txt
 
 ## Documentation
@@ -346,7 +348,8 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
     > Secure record management with blind encryption
 
     ## For AI Agents
-    - Pattern Manifest: /docs/ai-optimization/manifest.json
+    - Pattern Manifest: /docs/_ai/manifest.json
+- Tags Index: /docs/_ai/tags.json
     - Full Index: /docs/llms-full.txt
 
     ## Documentation
@@ -486,6 +489,8 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
     | `TestExtractJSON` | Extract JSON from markdown, surrounding text |
     | `TestTruncateContent` | Content truncation for large documents |
     | `TestClaudeCLIIntegration` | Real Claude CLI call (skipped if not installed) |
+    | `TestFrontmatterSpacingIdempotent` | Running --force twice produces identical output |
+    | `TestFrontmatterSpacingWithExistingNewlines` | Leading whitespace variations handled correctly |
 
 15. **Run tests:**
     ```bash
@@ -507,9 +512,11 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
     │   ├── ai-features.md
     │   └── examples.md
     ├── llms.txt                  # Generated
-    └── docs/ai-optimization/
+    └── docs/_ai/
         ├── manifest.json         # Generated
-        └── .cache.json           # Generated
+        ├── tags.json             # Generated
+        ├── .cache.json           # Cache (auto git-ignored)
+        └── .gitignore            # Auto-generated to ignore .cache.json
     ```
 
 ---
@@ -608,9 +615,11 @@ blind/
 └── docs/
     ├── llms-full.txt                # Generated
     ├── *.md                         # Updated with frontmatter
-    └── ai-optimization/
+    └── _ai/
         ├── manifest.json            # Generated
-        └── .cache.json              # Cache (git-ignored)
+        ├── tags.json                # Generated
+        ├── .cache.json              # Cache (auto git-ignored)
+        └── .gitignore               # Auto-generated
 ```
 
 ---
@@ -705,17 +714,22 @@ gendocs: gendocsbook genaidocs
 - [x] Config parsing (`.aidocs.yaml`)
 - [x] SUMMARY.md parser with category detection
 - [x] Frontmatter extraction (reads existing, extracts H1 as fallback)
+- [x] Frontmatter writing with idempotent spacing (exactly 1 empty line before H1)
 - [x] manifest.json generation
 - [x] tags.json generation (aggregated tags with counts and top tags)
-- [x] llms.txt and llms-full.txt generation
+- [x] llms.txt generation with Tags Index reference
+- [x] llms-full.txt generation
 - [x] SHA256 cache for change detection (excludes frontmatter)
+- [x] Auto-generated `.gitignore` in output directory (ignores `.cache.json`)
 - [x] Orphan file detection
 - [x] AI integration via Claude Code CLI (`claude -p`) - no API key needed
 - [x] AI unit tests (JSON parsing, extraction, truncation)
 - [x] AI integration test (real Claude CLI call, skipped if not installed)
+- [x] Frontmatter spacing tests (idempotent, various leading whitespace)
 - [x] Integration tests passing
 - [x] Test fixtures from blind repo
 - [x] Self-documentation (dogfooding): 6 docs in guide/reference categories
+- [x] Default output folder: `docs/_ai/` (shorter path)
 
 ### Next Steps
 
