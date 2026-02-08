@@ -25,14 +25,9 @@ func WriteLLMsFull(path string, docs []*Document, project config.ProjectConfig, 
 	lines := []string{
 		"# " + project.Name + " - Complete Document Index",
 		"",
-	}
-	if project.Version != "" {
-		lines = append(lines, "Version: "+project.Version)
-	}
-	lines = append(lines,
 		fmt.Sprintf("Total Documents: %d", len(docs)),
 		"",
-	)
+	}
 
 	// Group by category
 	byCategory := make(map[string][]*Document)
@@ -142,7 +137,7 @@ func WriteLLMsTxt(path string, docs []*Document, cfg *config.Config, dryRun bool
 	llmsFullRel, _ := filepath.Rel(llmsDir, cfg.Output.LLMsFull)
 
 	lines = append(lines,
-		"- Pattern Manifest: /"+manifestRel,
+		"- Documents Manifest: /"+manifestRel,
 		"- Tags Index: /"+tagsRel,
 		"- Full Index: /"+llmsFullRel,
 		"",
@@ -152,14 +147,14 @@ func WriteLLMsTxt(path string, docs []*Document, cfg *config.Config, dryRun bool
 		"# View manifest structure",
 		"cat "+manifestRel+" | jq '.knowledgeBase'",
 		"",
-		"# List all patterns",
-		"cat "+manifestRel+" | jq '.patterns[] | {id, name, section}'",
+		"# List all documents",
+		"cat "+manifestRel+" | jq '.documents[] | {id, name, section}'",
 		"",
 		"# Search by tag",
-		"cat "+manifestRel+" | jq '.patterns[] | select(.tags[]? | contains(\"encryption\"))'",
+		"cat "+manifestRel+" | jq '.documents[] | select(.tags[]? | contains(\"encryption\"))'",
 		"",
 		"# Filter by section",
-		"cat "+manifestRel+" | jq '.patterns[] | select(.section == \"WIP\")'",
+		"cat "+manifestRel+" | jq '.documents[] | select(.section == \"WIP\")'",
 		"",
 		"# List all tags with counts",
 		"cat "+tagsRel+" | jq '.tags | to_entries | sort_by(-.value.count) | .[:10]'",

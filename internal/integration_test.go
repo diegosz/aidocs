@@ -218,14 +218,14 @@ func TestGreenfieldGeneration(t *testing.T) {
 		t.Error("Expected 'WIP' section from SUMMARY.md")
 	}
 
-	// Verify patterns have frontmatter data where applicable
-	patterns, ok := manifest["patterns"].([]any)
+	// Verify documents have frontmatter data where applicable
+	documents, ok := manifest["documents"].([]any)
 	if !ok {
-		t.Fatal("Expected patterns to be an array")
+		t.Fatal("Expected documents to be an array")
 	}
 	foundWithTags := false
 	foundWithoutTags := false
-	for _, p := range patterns {
+	for _, p := range documents {
 		pm, ok := p.(map[string]any)
 		if !ok {
 			continue
@@ -237,10 +237,10 @@ func TestGreenfieldGeneration(t *testing.T) {
 		}
 	}
 	if !foundWithTags {
-		t.Error("Expected some patterns with tags from frontmatter")
+		t.Error("Expected some documents with tags from frontmatter")
 	}
 	if !foundWithoutTags {
-		t.Error("Expected some patterns without tags")
+		t.Error("Expected some documents without tags")
 	}
 }
 
@@ -286,11 +286,11 @@ func TestBrownfieldGeneration(t *testing.T) {
 		t.Fatalf("Failed to parse manifest2: %v", err)
 	}
 
-	// Compare patterns
-	p1, _ := m1["patterns"].([]any)
-	p2, _ := m2["patterns"].([]any)
+	// Compare documents
+	p1, _ := m1["documents"].([]any)
+	p2, _ := m2["documents"].([]any)
 	if len(p1) != len(p2) {
-		t.Errorf("Pattern count changed: %d -> %d", len(p1), len(p2))
+		t.Errorf("Document count changed: %d -> %d", len(p1), len(p2))
 	}
 
 	// Compare sections
@@ -404,16 +404,16 @@ func TestExpectedOutputComparison(t *testing.T) {
 		t.Fatalf("Failed to parse expected manifest: %v", err)
 	}
 
-	// Compare pattern IDs
-	genPatterns, _ := genM["patterns"].([]any)
-	expPatterns, _ := expM["patterns"].([]any)
+	// Compare document IDs
+	genDocs, _ := genM["documents"].([]any)
+	expDocs, _ := expM["documents"].([]any)
 
-	if len(genPatterns) != len(expPatterns) {
-		t.Errorf("Pattern count mismatch: generated %d, expected %d", len(genPatterns), len(expPatterns))
+	if len(genDocs) != len(expDocs) {
+		t.Errorf("Document count mismatch: generated %d, expected %d", len(genDocs), len(expDocs))
 	}
 
 	expIDs := make(map[string]bool)
-	for _, p := range expPatterns {
+	for _, p := range expDocs {
 		if pm, ok := p.(map[string]any); ok {
 			if id, ok := pm["id"].(string); ok {
 				expIDs[id] = true
@@ -421,11 +421,11 @@ func TestExpectedOutputComparison(t *testing.T) {
 		}
 	}
 
-	for _, p := range genPatterns {
+	for _, p := range genDocs {
 		if pm, ok := p.(map[string]any); ok {
 			if id, ok := pm["id"].(string); ok {
 				if !expIDs[id] {
-					t.Errorf("Unexpected pattern ID: %s", id)
+					t.Errorf("Unexpected document ID: %s", id)
 				}
 			}
 		}
@@ -925,11 +925,11 @@ func TestFrontmatterPreservedInOutput(t *testing.T) {
 		t.Fatalf("Failed to parse manifest: %v", err)
 	}
 
-	patterns, _ := manifest["patterns"].([]any)
+	manifestDocs, _ := manifest["documents"].([]any)
 
-	// Find a pattern that should have frontmatter data
+	// Find a document that should have frontmatter data
 	foundEncoding := false
-	for _, p := range patterns {
+	for _, p := range manifestDocs {
 		pm, ok := p.(map[string]any)
 		if !ok {
 			continue
@@ -960,7 +960,7 @@ func TestFrontmatterPreservedInOutput(t *testing.T) {
 	}
 
 	if !foundEncoding {
-		t.Error("Pattern 'blind-records-encoding' not found in manifest")
+		t.Error("Document 'blind-records-encoding' not found in manifest")
 	}
 
 	// Verify documents include frontmatter data

@@ -23,7 +23,7 @@ type Document struct {
 // Manifest represents the complete manifest.json structure.
 type Manifest struct {
 	KnowledgeBase map[string]any   `json:"knowledgeBase"`
-	Patterns      []map[string]any `json:"patterns"`
+	Documents     []map[string]any `json:"documents"`
 	Sections      map[string]any   `json:"sections"`
 	Metadata      map[string]any   `json:"metadata"`
 }
@@ -33,14 +33,13 @@ func GenerateManifest(docs []*Document, project config.ProjectConfig) *Manifest 
 	m := &Manifest{
 		KnowledgeBase: map[string]any{
 			"name":         project.Name,
-			"version":      project.Version,
 			"description":  project.Description,
 			"generatedBy":  "aidocs",
 			"generatedAt":  time.Now().UTC().Format(time.RFC3339),
 			"optimizedFor": project.OptimizedFor,
 		},
-		Patterns: make([]map[string]any, 0, len(docs)),
-		Sections: make(map[string]any),
+		Documents: make([]map[string]any, 0, len(docs)),
+		Sections:  make(map[string]any),
 		Metadata: map[string]any{
 			"totalDocuments":      len(docs),
 			"averageTokensPerDoc": 0,
@@ -52,7 +51,7 @@ func GenerateManifest(docs []*Document, project config.ProjectConfig) *Manifest 
 	totalTokens := 0
 
 	for _, doc := range docs {
-		pattern := map[string]any{
+		entry := map[string]any{
 			"id":   titleToID(doc.Frontmatter.Title),
 			"name": doc.Frontmatter.Title,
 			"paths": map[string]string{
@@ -61,30 +60,30 @@ func GenerateManifest(docs []*Document, project config.ProjectConfig) *Manifest 
 		}
 
 		if doc.Frontmatter.Description != "" {
-			pattern["description"] = doc.Frontmatter.Description
+			entry["description"] = doc.Frontmatter.Description
 		}
 
 		// Section comes from SUMMARY.md structure or frontmatter category
 		if doc.Frontmatter.Category != "" {
-			pattern["section"] = doc.Frontmatter.Category
+			entry["section"] = doc.Frontmatter.Category
 		} else if doc.Category != "" {
-			pattern["section"] = doc.Category
+			entry["section"] = doc.Category
 		}
 
 		if len(doc.Frontmatter.Tags) > 0 {
-			pattern["tags"] = doc.Frontmatter.Tags
+			entry["tags"] = doc.Frontmatter.Tags
 		}
 
 		if doc.Frontmatter.EstimatedTokens > 0 {
-			pattern["estimatedTokens"] = doc.Frontmatter.EstimatedTokens
+			entry["estimatedTokens"] = doc.Frontmatter.EstimatedTokens
 			totalTokens += doc.Frontmatter.EstimatedTokens
 		}
 
 		if doc.Frontmatter.Summary != "" {
-			pattern["summary"] = doc.Frontmatter.Summary
+			entry["summary"] = doc.Frontmatter.Summary
 		}
 
-		m.Patterns = append(m.Patterns, pattern)
+		m.Documents = append(m.Documents, entry)
 
 		// Track sections
 		section := doc.Frontmatter.Category

@@ -2,11 +2,10 @@
   "knowledgeBase": {
     "name": "Blind Record System",
     "description": "Secure record management with blind encryption",
-    "version": "v0.4.96",
     "generatedBy": "aidocs",
     "optimizedFor": ["Claude Code", "BMAD BMM", "AI Agents"]
   },
-  "patterns": [
+  "documents": [
     {
       "id": "blind-records",
       "name": "Blind Records"

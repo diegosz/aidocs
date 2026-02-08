@@ -4,7 +4,7 @@
 
 ## For AI Agents
 
-- Pattern Manifest: /docs/_ai/manifest.json
+- Documents Manifest: /docs/_ai/manifest.json
 - Tags Index: /docs/_ai/tags.json
 - Full Index: /docs/llms-full.txt
 
@@ -14,14 +14,14 @@
 # View manifest structure
 cat docs/_ai/manifest.json | jq '.knowledgeBase'
 
-# List all patterns
-cat docs/_ai/manifest.json | jq '.patterns[] | {id, name, section}'
+# List all documents
+cat docs/_ai/manifest.json | jq '.documents[] | {id, name, section}'
 
 # Search by tag
-cat docs/_ai/manifest.json | jq '.patterns[] | select(.tags[]? | contains("encryption"))'
+cat docs/_ai/manifest.json | jq '.documents[] | select(.tags[]? | contains("encryption"))'
 
 # Filter by section
-cat docs/_ai/manifest.json | jq '.patterns[] | select(.section == "WIP")'
+cat docs/_ai/manifest.json | jq '.documents[] | select(.section == "WIP")'
 
 # List all tags with counts
 cat docs/_ai/tags.json | jq '.tags | to_entries | sort_by(-.value.count) | .[:10]'
