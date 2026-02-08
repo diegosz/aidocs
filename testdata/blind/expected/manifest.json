@@ -27,7 +27,7 @@
       "id": "blind-records-encoding",
       "name": "Blind Records Encoding",
       "description": "Encoding format for blind records",
-      "category": "reference",
+      "section": "reference",
       "tags": ["encoding", "format", "binary"],
       "estimatedTokens": 450
     },
@@ -35,7 +35,7 @@
       "id": "example-blind-record",
       "name": "Example Blind Record",
       "description": "Example showing a complete blind record structure",
-      "category": "examples",
+      "section": "examples",
       "tags": ["example", "record", "tutorial"],
       "estimatedTokens": 380
     },
@@ -43,22 +43,22 @@
       "id": "example-blind-keys",
       "name": "Example Blind Keys",
       "description": "Example showing key generation and usage",
-      "category": "examples",
+      "section": "examples",
       "tags": ["example", "keys", "encryption"],
       "estimatedTokens": 420
     },
     {
       "id": "development-notes",
       "name": "Development Notes",
-      "category": "WIP"
+      "section": "WIP"
     },
     {
       "id": "blind-record-services-wip",
       "name": "Blind Record Services WIP",
-      "category": "WIP"
+      "section": "WIP"
     }
   ],
-  "categories": {
+  "sections": {
     "WIP": {
       "count": 2,
       "documents": ["blind-record-services-wip", "development-notes"]

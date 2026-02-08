@@ -717,7 +717,8 @@ gendocs: gendocsbook genaidocs
 - [x] Frontmatter writing with idempotent spacing (exactly 1 empty line before H1)
 - [x] manifest.json generation
 - [x] tags.json generation (aggregated tags with counts and top tags)
-- [x] llms.txt generation with Tags Index reference
+- [x] llms.txt generation with Tags Index reference and Usage section (jq examples)
+- [x] JSON output uses "section" instead of "category" (reflects SUMMARY.md structure)
 - [x] llms-full.txt generation
 - [x] SHA256 cache for change detection (excludes frontmatter)
 - [x] Auto-generated `.gitignore` in output directory (ignores `.cache.json`)

@@ -203,19 +203,19 @@ func TestGreenfieldGeneration(t *testing.T) {
 		t.Fatalf("Failed to parse manifest: %v", err)
 	}
 
-	// Check categories include those from frontmatter
-	categories, ok := manifest["categories"].(map[string]any)
+	// Check sections include those from frontmatter and SUMMARY.md
+	sections, ok := manifest["sections"].(map[string]any)
 	if !ok {
-		t.Fatal("Expected categories to be a map")
+		t.Fatal("Expected sections to be a map")
 	}
-	if _, ok := categories["examples"]; !ok {
-		t.Error("Expected 'examples' category from frontmatter")
+	if _, ok := sections["examples"]; !ok {
+		t.Error("Expected 'examples' section from frontmatter")
 	}
-	if _, ok := categories["reference"]; !ok {
-		t.Error("Expected 'reference' category from frontmatter")
+	if _, ok := sections["reference"]; !ok {
+		t.Error("Expected 'reference' section from frontmatter")
 	}
-	if _, ok := categories["WIP"]; !ok {
-		t.Error("Expected 'WIP' category from SUMMARY.md")
+	if _, ok := sections["WIP"]; !ok {
+		t.Error("Expected 'WIP' section from SUMMARY.md")
 	}
 
 	// Verify patterns have frontmatter data where applicable
@@ -293,11 +293,11 @@ func TestBrownfieldGeneration(t *testing.T) {
 		t.Errorf("Pattern count changed: %d -> %d", len(p1), len(p2))
 	}
 
-	// Compare categories
-	c1, _ := m1["categories"].(map[string]any)
-	c2, _ := m2["categories"].(map[string]any)
+	// Compare sections
+	c1, _ := m1["sections"].(map[string]any)
+	c2, _ := m2["sections"].(map[string]any)
 	if len(c1) != len(c2) {
-		t.Errorf("Category count changed: %d -> %d", len(c1), len(c2))
+		t.Errorf("Section count changed: %d -> %d", len(c1), len(c2))
 	}
 
 	// llms.txt should be identical (not regenerated if exists)
@@ -431,13 +431,13 @@ func TestExpectedOutputComparison(t *testing.T) {
 		}
 	}
 
-	// Compare categories
-	genCats, _ := genM["categories"].(map[string]any)
-	expCats, _ := expM["categories"].(map[string]any)
+	// Compare sections
+	genSecs, _ := genM["sections"].(map[string]any)
+	expSecs, _ := expM["sections"].(map[string]any)
 
-	for catName := range expCats {
-		if _, ok := genCats[catName]; !ok {
-			t.Errorf("Missing expected category: %s", catName)
+	for secName := range expSecs {
+		if _, ok := genSecs[secName]; !ok {
+			t.Errorf("Missing expected section: %s", secName)
 		}
 	}
 }
@@ -867,7 +867,7 @@ func TestSummaryParsing(t *testing.T) {
 		t.Errorf("Expected 5 entries, got %d", len(entries))
 	}
 
-	// Check categories
+	// Check sections (Category field stores section from SUMMARY.md)
 	advancedCount := 0
 	for _, e := range entries {
 		if e.Category == "Advanced" {
@@ -875,7 +875,7 @@ func TestSummaryParsing(t *testing.T) {
 		}
 	}
 	if advancedCount != 2 {
-		t.Errorf("Expected 2 Advanced entries, got %d", advancedCount)
+		t.Errorf("Expected 2 Advanced section entries, got %d", advancedCount)
 	}
 
 	// Check paths
@@ -952,9 +952,9 @@ func TestFrontmatterPreservedInOutput(t *testing.T) {
 				t.Errorf("Expected estimatedTokens 450, got: %v", pm["estimatedTokens"])
 			}
 
-			// Should have category from frontmatter
-			if pm["category"] != "reference" {
-				t.Errorf("Expected category 'reference', got: %v", pm["category"])
+			// Should have section from frontmatter
+			if pm["section"] != "reference" {
+				t.Errorf("Expected section 'reference', got: %v", pm["section"])
 			}
 		}
 	}

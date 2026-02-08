@@ -24,7 +24,7 @@ type Document struct {
 type Manifest struct {
 	KnowledgeBase map[string]any   `json:"knowledgeBase"`
 	Patterns      []map[string]any `json:"patterns"`
-	Categories    map[string]any   `json:"categories"`
+	Sections      map[string]any   `json:"sections"`
 	Metadata      map[string]any   `json:"metadata"`
 }
 
@@ -39,16 +39,16 @@ func GenerateManifest(docs []*Document, project config.ProjectConfig) *Manifest 
 			"generatedAt":  time.Now().UTC().Format(time.RFC3339),
 			"optimizedFor": project.OptimizedFor,
 		},
-		Patterns:   make([]map[string]any, 0, len(docs)),
-		Categories: make(map[string]any),
+		Patterns: make([]map[string]any, 0, len(docs)),
+		Sections: make(map[string]any),
 		Metadata: map[string]any{
 			"totalDocuments":      len(docs),
 			"averageTokensPerDoc": 0,
 		},
 	}
 
-	// Group patterns by category
-	categoryDocs := make(map[string][]string)
+	// Group patterns by section (from SUMMARY.md structure)
+	sectionDocs := make(map[string][]string)
 	totalTokens := 0
 
 	for _, doc := range docs {
@@ -64,10 +64,11 @@ func GenerateManifest(docs []*Document, project config.ProjectConfig) *Manifest 
 			pattern["description"] = doc.Frontmatter.Description
 		}
 
+		// Section comes from SUMMARY.md structure or frontmatter category
 		if doc.Frontmatter.Category != "" {
-			pattern["category"] = doc.Frontmatter.Category
+			pattern["section"] = doc.Frontmatter.Category
 		} else if doc.Category != "" {
-			pattern["category"] = doc.Category
+			pattern["section"] = doc.Category
 		}
 
 		if len(doc.Frontmatter.Tags) > 0 {
@@ -85,21 +86,21 @@ func GenerateManifest(docs []*Document, project config.ProjectConfig) *Manifest 
 
 		m.Patterns = append(m.Patterns, pattern)
 
-		// Track categories
-		cat := doc.Frontmatter.Category
-		if cat == "" {
-			cat = doc.Category
+		// Track sections
+		section := doc.Frontmatter.Category
+		if section == "" {
+			section = doc.Category
 		}
-		if cat == "" {
-			cat = "general"
+		if section == "" {
+			section = "general"
 		}
-		categoryDocs[cat] = append(categoryDocs[cat], titleToID(doc.Frontmatter.Title))
+		sectionDocs[section] = append(sectionDocs[section], titleToID(doc.Frontmatter.Title))
 	}
 
-	// Build categories map
-	for cat, ids := range categoryDocs {
+	// Build sections map
+	for section, ids := range sectionDocs {
 		sort.Strings(ids)
-		m.Categories[cat] = map[string]any{
+		m.Sections[section] = map[string]any{
 			"documents": ids,
 			"count":     len(ids),
 		}
