@@ -1,0 +1,38 @@
+{
+  "tags": {
+    "binary": {
+      "count": 1,
+      "documents": ["blind-records-encoding"]
+    },
+    "encoding": {
+      "count": 1,
+      "documents": ["blind-records-encoding"]
+    },
+    "encryption": {
+      "count": 1,
+      "documents": ["example-blind-keys"]
+    },
+    "example": {
+      "count": 2,
+      "documents": ["example-blind-keys", "example-blind-record"]
+    },
+    "format": {
+      "count": 1,
+      "documents": ["blind-records-encoding"]
+    },
+    "keys": {
+      "count": 1,
+      "documents": ["example-blind-keys"]
+    },
+    "record": {
+      "count": 1,
+      "documents": ["example-blind-record"]
+    },
+    "tutorial": {
+      "count": 1,
+      "documents": ["example-blind-record"]
+    }
+  },
+  "totalTags": 8,
+  "topTags": ["example", "binary", "encoding", "encryption", "format", "keys", "record", "tutorial"]
+}

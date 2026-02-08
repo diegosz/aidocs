@@ -104,6 +104,12 @@ func runAidocs(t *testing.T, configPath string) ([]*generator.Document, *config.
 		t.Fatalf("Failed to write llms.txt: %v", err)
 	}
 
+	// Generate tags.json
+	tags := generator.GenerateTags(docs)
+	if err := generator.WriteTags(cfg.Output.Tags, tags, false); err != nil {
+		t.Fatalf("Failed to write tags.json: %v", err)
+	}
+
 	// Save cache
 	docCache := cache.New()
 	for _, doc := range docs {
@@ -169,6 +175,25 @@ func TestGreenfieldGeneration(t *testing.T) {
 	}
 	if _, err := os.Stat(cfg.Output.Cache); err != nil {
 		t.Errorf("Cache not created: %v", err)
+	}
+	if _, err := os.Stat(cfg.Output.Tags); err != nil {
+		t.Errorf("tags.json not created: %v", err)
+	}
+
+	// Verify tags.json structure
+	tagsData, _ := os.ReadFile(cfg.Output.Tags)
+	var tagsFile map[string]any
+	if err := json.Unmarshal(tagsData, &tagsFile); err != nil {
+		t.Fatalf("Failed to parse tags.json: %v", err)
+	}
+	if _, ok := tagsFile["tags"]; !ok {
+		t.Error("tags.json missing 'tags' field")
+	}
+	if _, ok := tagsFile["totalTags"]; !ok {
+		t.Error("tags.json missing 'totalTags' field")
+	}
+	if _, ok := tagsFile["topTags"]; !ok {
+		t.Error("tags.json missing 'topTags' field")
 	}
 
 	// Verify manifest structure

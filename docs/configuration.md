@@ -23,6 +23,7 @@ output:
   llms_txt: "llms.txt"                    # Root navigation file
   llms_full: "docs/llms-full.txt"         # Complete document index
   manifest: "docs/ai-optimization/manifest.json"
+  tags: "docs/ai-optimization/tags.json"  # Aggregated tags index
   cache: "docs/ai-optimization/.cache.json"
 
 # AI features (uses Claude Code CLI)
@@ -54,6 +55,7 @@ Path to your SUMMARY.md file. This file defines the documentation structure.
 - `llms_txt`: Path for the root llms.txt file (default: `llms.txt`)
 - `llms_full`: Path for the complete index (default: `docs/llms-full.txt`)
 - `manifest`: Path for manifest.json (default: `docs/ai-optimization/manifest.json`)
+- `tags`: Path for tags.json (default: `docs/ai-optimization/tags.json`)
 - `cache`: Path for cache file (default: `docs/ai-optimization/.cache.json`)
 
 ### ai

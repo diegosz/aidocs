@@ -27,6 +27,7 @@ type OutputConfig struct {
 	LLMsTxt  string `yaml:"llms_txt"`
 	LLMsFull string `yaml:"llms_full"`
 	Manifest string `yaml:"manifest"`
+	Tags     string `yaml:"tags"`
 	Cache    string `yaml:"cache"`
 }
 
@@ -56,6 +57,7 @@ func DefaultConfig() *Config {
 			LLMsTxt:  "llms.txt",
 			LLMsFull: "docs/llms-full.txt",
 			Manifest: "docs/ai-optimization/manifest.json",
+			Tags:     "docs/ai-optimization/tags.json",
 			Cache:    "docs/ai-optimization/.cache.json",
 		},
 		AI: AIConfig{
@@ -105,6 +107,7 @@ func Load(path string) (*Config, error) {
 	cfg.Output.LLMsTxt = cfg.resolvePath(cfg.Output.LLMsTxt)
 	cfg.Output.LLMsFull = cfg.resolvePath(cfg.Output.LLMsFull)
 	cfg.Output.Manifest = cfg.resolvePath(cfg.Output.Manifest)
+	cfg.Output.Tags = cfg.resolvePath(cfg.Output.Tags)
 	cfg.Output.Cache = cfg.resolvePath(cfg.Output.Cache)
 
 	// Get version from git if not specified

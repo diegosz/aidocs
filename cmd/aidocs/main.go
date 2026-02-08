@@ -196,6 +196,13 @@ func run() error {
 	}
 	fmt.Println("Generated llms.txt")
 
+	// Generate tags.json
+	tags := generator.GenerateTags(docs)
+	if err := generator.WriteTags(cfg.Output.Tags, tags, *dryRun); err != nil {
+		return fmt.Errorf("write tags.json: %w", err)
+	}
+	fmt.Printf("Generated tags.json (%d unique tags)\n", tags.TotalTags)
+
 	// Save cache
 	if !*dryRun {
 		if err := docCache.Save(cfg.Output.Cache); err != nil {
@@ -219,6 +226,7 @@ output:
   llms_txt: "llms.txt"                    # Root navigation (auto-generated if missing)
   llms_full: "docs/llms-full.txt"         # Complete index
   manifest: "docs/ai-optimization/manifest.json"
+  tags: "docs/ai-optimization/tags.json"  # Aggregated tags index
   cache: "docs/ai-optimization/.cache.json"
 
 # AI features (uses Claude Code CLI - no API key needed)

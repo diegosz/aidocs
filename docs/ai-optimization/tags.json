@@ -1,0 +1,138 @@
+{
+  "tags": {
+    "ai": {
+      "count": 1,
+      "documents": [
+        "ai-features"
+      ]
+    },
+    "automation": {
+      "count": 1,
+      "documents": [
+        "ai-features"
+      ]
+    },
+    "claude": {
+      "count": 1,
+      "documents": [
+        "ai-features"
+      ]
+    },
+    "cli": {
+      "count": 1,
+      "documents": [
+        "cli-reference"
+      ]
+    },
+    "commands": {
+      "count": 1,
+      "documents": [
+        "cli-reference"
+      ]
+    },
+    "config": {
+      "count": 1,
+      "documents": [
+        "configuration"
+      ]
+    },
+    "flags": {
+      "count": 1,
+      "documents": [
+        "cli-reference"
+      ]
+    },
+    "frontmatter": {
+      "count": 1,
+      "documents": [
+        "frontmatter-specification"
+      ]
+    },
+    "installation": {
+      "count": 1,
+      "documents": [
+        "getting-started"
+      ]
+    },
+    "llms-txt": {
+      "count": 1,
+      "documents": [
+        "output-files"
+      ]
+    },
+    "manifest": {
+      "count": 1,
+      "documents": [
+        "output-files"
+      ]
+    },
+    "metadata": {
+      "count": 1,
+      "documents": [
+        "frontmatter-specification"
+      ]
+    },
+    "output": {
+      "count": 1,
+      "documents": [
+        "output-files"
+      ]
+    },
+    "quickstart": {
+      "count": 1,
+      "documents": [
+        "getting-started"
+      ]
+    },
+    "settings": {
+      "count": 1,
+      "documents": [
+        "configuration"
+      ]
+    },
+    "setup": {
+      "count": 1,
+      "documents": [
+        "getting-started"
+      ]
+    },
+    "specification": {
+      "count": 1,
+      "documents": [
+        "frontmatter-specification"
+      ]
+    },
+    "summaries": {
+      "count": 1,
+      "documents": [
+        "ai-features"
+      ]
+    },
+    "tags": {
+      "count": 1,
+      "documents": [
+        "output-files"
+      ]
+    },
+    "yaml": {
+      "count": 2,
+      "documents": [
+        "configuration",
+        "frontmatter-specification"
+      ]
+    }
+  },
+  "totalTags": 20,
+  "topTags": [
+    "yaml",
+    "ai",
+    "automation",
+    "claude",
+    "cli",
+    "commands",
+    "config",
+    "flags",
+    "frontmatter",
+    "installation"
+  ]
+}

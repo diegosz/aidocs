@@ -5,6 +5,7 @@ output:
   llms_txt: "llms.txt"
   llms_full: "docs/llms-full.txt"
   manifest: "docs/ai-optimization/manifest.json"
+  tags: "docs/ai-optimization/tags.json"
   cache: "docs/ai-optimization/.cache.json"
 
 # AI features use Claude Code CLI (claude -p) - no API key needed
