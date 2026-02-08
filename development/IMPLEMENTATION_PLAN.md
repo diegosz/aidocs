@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-A Go tool for generating LLM-friendly documentation with structured discovery files (manifest.json, llms.txt). The tool uses SUMMARY.md as the source of truth for content structure, supports AI-powered summary generation via Claude Code CLI, and includes intelligent change detection.
+A Go tool for generating LLM-friendly documentation with structured discovery files (manifest.json, tags.json, llms.txt). The tool uses SUMMARY.md as the source of truth for content structure, supports AI-powered summary generation via Claude Code CLI, and includes intelligent change detection.
 
 **Tool Name:** `aidocs`
 **Repository:** Separate repository (new project)
@@ -21,7 +21,8 @@ CONFIG                          TOOL                       OUTPUT FILES
                                    │      │
                                    ▼      └───────────→ docs/ai-optimization/
                             Claude Code CLI                ├── manifest.json
-                            (claude -p)                    └── .cache.json
+                            (claude -p)                    ├── tags.json
+                                                           └── .cache.json
 
 SOURCE FILES (referenced by SUMMARY.md)
 
@@ -61,6 +62,7 @@ output:
   llms_txt: "llms.txt"                    # Root navigation (auto-generated if missing)
   llms_full: "docs/llms-full.txt"         # Complete index
   manifest: "docs/ai-optimization/manifest.json"
+  tags: "docs/ai-optimization/tags.json"  # Aggregated tags index
   cache: "docs/ai-optimization/.cache.json"
 
 # AI features (uses Claude Code CLI - no API key needed)
@@ -218,6 +220,7 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
    │   ├── parser/summary.go      # Parse SUMMARY.md structure
    │   ├── parser/frontmatter.go  # Extract/generate frontmatter
    │   ├── generator/manifest.go  # Generate manifest.json
+   │   ├── generator/tags.go      # Generate tags.json
    │   ├── generator/llmstxt.go   # Generate llms.txt, llms-full.txt
    │   ├── cache/cache.go         # SHA256 change detection
    │   └── ai/instructor.go       # Claude Code CLI integration
@@ -371,6 +374,27 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
     }
     ```
 
+12. **Generate `tags.json`:**
+    ```json
+    {
+      "tags": {
+        "encryption": {
+          "count": 3,
+          "documents": ["blind-records", "blind-keys", "example-keys"]
+        },
+        "example": {
+          "count": 2,
+          "documents": ["example-record", "example-keys"]
+        }
+      },
+      "totalTags": 15,
+      "topTags": ["encryption", "records", "keys", "example", "storage"]
+    }
+    ```
+    - `tags`: Map of tag name to documents and count
+    - `totalTags`: Total unique tags across all documents
+    - `topTags`: Top 10 most common tags (sorted by count, then alphabetically)
+
 ### Phase 6: Integration Tests with Blind Project
 
 12. **Test fixtures structure (source folder pattern):**
@@ -504,6 +528,7 @@ aidocs/                              # NEW REPOSITORY
 │   │   └── frontmatter.go           # Extract/validate/generate frontmatter
 │   ├── generator/
 │   │   ├── manifest.go              # Generate manifest.json
+│   │   ├── tags.go                  # Generate tags.json
 │   │   └── llmstxt.go               # Generate llms.txt, llms-full.txt
 │   ├── cache/
 │   │   └── cache.go                 # SHA256 change detection
@@ -522,7 +547,8 @@ aidocs/                              # NEW REPOSITORY
 │       └── expected/                # Expected outputs for assertions
 │           ├── llms.txt
 │           ├── llms-full.txt
-│           └── manifest.json
+│           ├── manifest.json
+│           └── tags.json
 ├── docs/                            # Self-documentation (dogfooding)
 │   ├── SUMMARY.md
 │   ├── getting-started.md
@@ -602,7 +628,7 @@ blind/
 | Change detection | SHA256 on content excluding frontmatter |
 | Frontmatter | Auto-generated if missing (via Claude CLI) |
 | Orphan detection | `--show-orphans` flag |
-| Output format | manifest.json + llms.txt + llms-full.txt |
+| Output format | manifest.json + tags.json + llms.txt + llms-full.txt |
 | Self-documentation | Dogfooding (aidocs documents itself) |
 | Testing | Integration tests with fixtures from blind repo |
 
@@ -680,6 +706,7 @@ gendocs: gendocsbook genaidocs
 - [x] SUMMARY.md parser with category detection
 - [x] Frontmatter extraction (reads existing, extracts H1 as fallback)
 - [x] manifest.json generation
+- [x] tags.json generation (aggregated tags with counts and top tags)
 - [x] llms.txt and llms-full.txt generation
 - [x] SHA256 cache for change detection (excludes frontmatter)
 - [x] Orphan file detection
