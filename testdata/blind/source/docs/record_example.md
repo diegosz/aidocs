@@ -1,7 +1,7 @@
 ---
 title: "Example Blind Record"
 description: "Example showing a complete blind record structure"
-category: "examples"
+section: "examples"
 tags: ["example", "record", "tutorial"]
 estimatedTokens: 380
 ---

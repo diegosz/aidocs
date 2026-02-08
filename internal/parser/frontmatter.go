@@ -14,7 +14,7 @@ import (
 type Frontmatter struct {
 	Title           string   `yaml:"title"`
 	Description     string   `yaml:"description"`
-	Category        string   `yaml:"category"`
+	Section         string   `yaml:"section"`
 	Tags            []string `yaml:"tags"`
 	EstimatedTokens int      `yaml:"estimatedTokens,omitempty"`
 	Summary         string   `yaml:"summary,omitempty"` // AI-generated summary

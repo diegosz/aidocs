@@ -1,7 +1,7 @@
 ---
 title: "Example Blind Keys"
 description: "Example showing key generation and usage"
-category: "examples"
+section: "examples"
 tags: ["example", "keys", "encryption"]
 estimatedTokens: 420
 ---

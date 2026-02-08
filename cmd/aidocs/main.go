@@ -125,9 +125,9 @@ func run() error {
 			fm.Title = entry.Title
 		}
 
-		// Use entry category if frontmatter category is missing
-		if fm.Category == "" && entry.Category != "" {
-			fm.Category = entry.Category
+		// Use SUMMARY.md section if frontmatter section is missing
+		if fm.Section == "" && entry.Section != "" {
+			fm.Section = entry.Section
 		}
 
 		// Generate AI summaries if enabled and needed
@@ -169,7 +169,7 @@ func run() error {
 		docs = append(docs, &generator.Document{
 			Path:        docPath,
 			Frontmatter: fm,
-			Category:    entry.Category,
+			Section:     entry.Section,
 		})
 	}
 

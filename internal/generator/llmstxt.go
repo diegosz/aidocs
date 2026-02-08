@@ -32,9 +32,9 @@ func WriteLLMsFull(path string, docs []*Document, project config.ProjectConfig, 
 	// Group by category
 	byCategory := make(map[string][]*Document)
 	for _, doc := range docs {
-		cat := doc.Frontmatter.Category
+		cat := doc.Frontmatter.Section
 		if cat == "" {
-			cat = doc.Category
+			cat = doc.Section
 		}
 		if cat == "" {
 			cat = "General"

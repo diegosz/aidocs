@@ -78,7 +78,7 @@ ai:
 project:
   name: "Blind Record System"
   description: "Secure record management with blind encryption"
-  version: ""                             # Empty = use git tag
+  version: ""                             # Not used in output (removed)
   optimized_for:
     - "Claude Code"
     - "BMAD BMM"
@@ -136,7 +136,7 @@ func callClaudeCLI(prompt string) (*GeneratedMeta, error) {
 - [Blind Records](records.md)       ← processed
 - [Record Types](record_types.md)   ← processed
 - WIP
-  - [Dev Notes](dev_records.md)     ← processed, category: "WIP"
+  - [Dev Notes](dev_records.md)     ← processed, section: "WIP"
 ```
 
 ### 2. Frontmatter + H1 Title Requirement
@@ -147,7 +147,7 @@ Files MUST have both frontmatter AND matching H1 title:
 ---
 title: "Blind Records"
 description: "Core blind record concepts"
-category: reference
+section: reference
 tags: [records, encryption]
 estimatedTokens: 500
 ---
@@ -199,7 +199,7 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
 > {project.description}
 
 ## For AI Agents
-- Pattern Manifest: /docs/_ai/manifest.json
+- Documents Manifest: /docs/_ai/manifest.json
 - Tags Index: /docs/_ai/tags.json
 - Full Index: /docs/llms-full.txt
 
@@ -252,7 +252,7 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
    type SummaryEntry struct {
        Title    string         // Link text
        Path     string         // Relative path to .md file
-       Category string         // Parent heading (e.g., "WIP")
+       Section  string         // Parent heading (e.g., "WIP")
        Children []SummaryEntry // Nested entries
    }
 
@@ -273,7 +273,7 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
    type Frontmatter struct {
        Title           string   `yaml:"title"`
        Description     string   `yaml:"description"`
-       Category        string   `yaml:"category"`
+       Section         string   `yaml:"section"`
        Tags            []string `yaml:"tags"`
        EstimatedTokens int      `yaml:"estimatedTokens"`
    }
@@ -348,7 +348,7 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
     > Secure record management with blind encryption
 
     ## For AI Agents
-    - Pattern Manifest: /docs/_ai/manifest.json
+    - Documents Manifest: /docs/_ai/manifest.json
 - Tags Index: /docs/_ai/tags.json
     - Full Index: /docs/llms-full.txt
 
@@ -362,17 +362,16 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
     {
       "knowledgeBase": {
         "name": "Blind Record System",
-        "version": "v0.4.96",
+        "description": "Secure record management with blind encryption",
         "generatedBy": "aidocs",
         "generatedAt": "2024-01-15T10:30:00Z",
         "optimizedFor": ["Claude Code", "BMAD BMM", "AI Agents"]
       },
-      "patterns": [...],
-      "categories": {...},
+      "documents": [...],
+      "sections": {...},
       "metadata": {
         "totalDocuments": 9,
-        "averageTokensPerDoc": 600,
-        "contentFile": "docs/SUMMARY.md"
+        "averageTokensPerDoc": 600
       }
     }
     ```
@@ -467,7 +466,7 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
     // TestFrontmatterPreservedInOutput - verifies frontmatter data in manifest
     func TestFrontmatterPreservedInOutput(t *testing.T) {
         // Verifies files WITH frontmatter have metadata in manifest
-        // (description, tags, category, estimatedTokens)
+        // (description, tags, section, estimatedTokens)
     }
     ```
 
@@ -596,8 +595,8 @@ require (
 | `docs/record_encoding.md` | Sample doc - encoding |
 | `docs/record_example.md` | Sample doc - examples |
 | `docs/keys_example.md` | Sample doc - key examples |
-| `docs/dev_records.md` | Sample doc - WIP category |
-| `docs/dev_services.md` | Sample doc - WIP category |
+| `docs/dev_records.md` | Sample doc - WIP section |
+| `docs/dev_services.md` | Sample doc - WIP section |
 
 **Create expected outputs manually for assertions:**
 ```
@@ -712,13 +711,16 @@ gendocs: gendocsbook genaidocs
 
 - [x] CLI with all planned flags (`--init`, `--force`, `--dry-run`, `--show-orphans`, `-v`)
 - [x] Config parsing (`.aidocs.yaml`)
-- [x] SUMMARY.md parser with category detection
+- [x] SUMMARY.md parser with section detection
 - [x] Frontmatter extraction (reads existing, extracts H1 as fallback)
 - [x] Frontmatter writing with idempotent spacing (exactly 1 empty line before H1)
 - [x] manifest.json generation
 - [x] tags.json generation (aggregated tags with counts and top tags)
 - [x] llms.txt generation with Tags Index reference and Usage section (jq examples)
 - [x] JSON output uses "section" instead of "category" (reflects SUMMARY.md structure)
+- [x] All structs use `Section` field (Frontmatter, SummaryEntry, Document)
+- [x] JSON output uses "documents" instead of "patterns" (clearer naming)
+- [x] Removed version from manifest.json/llms-full.txt (not available at generation time)
 - [x] llms-full.txt generation
 - [x] SHA256 cache for change detection (excludes frontmatter)
 - [x] Auto-generated `.gitignore` in output directory (ignores `.cache.json`)

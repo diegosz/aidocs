@@ -1,7 +1,7 @@
 ---
 title: "Blind Records Encoding"
 description: "Encoding format for blind records"
-category: "reference"
+section: "reference"
 tags: ["encoding", "format", "binary"]
 estimatedTokens: 450
 ---

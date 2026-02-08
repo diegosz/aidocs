@@ -17,7 +17,7 @@ import (
 type Document struct {
 	Path        string
 	Frontmatter *parser.Frontmatter
-	Category    string
+	Section     string // From SUMMARY.md structure
 }
 
 // Manifest represents the complete manifest.json structure.
@@ -64,10 +64,10 @@ func GenerateManifest(docs []*Document, project config.ProjectConfig) *Manifest 
 		}
 
 		// Section comes from SUMMARY.md structure or frontmatter category
-		if doc.Frontmatter.Category != "" {
-			entry["section"] = doc.Frontmatter.Category
-		} else if doc.Category != "" {
-			entry["section"] = doc.Category
+		if doc.Frontmatter.Section != "" {
+			entry["section"] = doc.Frontmatter.Section
+		} else if doc.Section != "" {
+			entry["section"] = doc.Section
 		}
 
 		if len(doc.Frontmatter.Tags) > 0 {
@@ -86,9 +86,9 @@ func GenerateManifest(docs []*Document, project config.ProjectConfig) *Manifest 
 		m.Documents = append(m.Documents, entry)
 
 		// Track sections
-		section := doc.Frontmatter.Category
+		section := doc.Frontmatter.Section
 		if section == "" {
-			section = doc.Category
+			section = doc.Section
 		}
 		if section == "" {
 			section = "general"

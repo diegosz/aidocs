@@ -79,14 +79,14 @@ func runAidocs(t *testing.T, configPath string) ([]*generator.Document, *config.
 		if fm.Title == "" {
 			fm.Title = entry.Title
 		}
-		if fm.Category == "" && entry.Category != "" {
-			fm.Category = entry.Category
+		if fm.Section == "" && entry.Section != "" {
+			fm.Section = entry.Section
 		}
 
 		docs = append(docs, &generator.Document{
 			Path:        docPath,
 			Frontmatter: fm,
-			Category:    entry.Category,
+			Section:     entry.Section,
 		})
 	}
 
@@ -867,10 +867,10 @@ func TestSummaryParsing(t *testing.T) {
 		t.Errorf("Expected 5 entries, got %d", len(entries))
 	}
 
-	// Check sections (Category field stores section from SUMMARY.md)
+	// Check sections (Section field stores section from SUMMARY.md)
 	advancedCount := 0
 	for _, e := range entries {
-		if e.Category == "Advanced" {
+		if e.Section == "Advanced" {
 			advancedCount++
 		}
 	}

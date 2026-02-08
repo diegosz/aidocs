@@ -13,7 +13,7 @@ import (
 type SummaryEntry struct {
 	Title    string         // Link text
 	Path     string         // Relative path to .md file
-	Category string         // Parent heading (e.g., "WIP")
+	Section  string         // Parent heading (e.g., "WIP")
 	Children []SummaryEntry // Nested entries
 }
 
@@ -29,14 +29,14 @@ func ParseSummary(path string) ([]SummaryEntry, error) {
 	defer file.Close()
 
 	var entries []SummaryEntry
-	var currentCategory string
+	var currentSection string
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		// Check for category header (line that's not a link but contains text)
-		// Categories are typically indented list items without links
+		// Check for section header (line that's not a link but contains text)
+		// Sections are typically indented list items without links
 		trimmed := strings.TrimSpace(line)
 
 		// Skip empty lines and the title
@@ -44,14 +44,14 @@ func ParseSummary(path string) ([]SummaryEntry, error) {
 			continue
 		}
 
-		// Check if this is a category (list item without link)
+		// Check if this is a section (list item without link)
 		if strings.HasPrefix(trimmed, "-") || strings.HasPrefix(trimmed, "*") {
 			content := strings.TrimPrefix(strings.TrimPrefix(trimmed, "-"), "*")
 			content = strings.TrimSpace(content)
 
-			// If it doesn't contain a link, it's a category
+			// If it doesn't contain a link, it's a section
 			if !strings.Contains(content, "[") {
-				currentCategory = content
+				currentSection = content
 				continue
 			}
 		}
@@ -68,12 +68,12 @@ func ParseSummary(path string) ([]SummaryEntry, error) {
 				Path:  matches[2],
 			}
 
-			// Apply category to indented entries (2+ spaces means nested)
-			if indent >= 2 && currentCategory != "" {
-				entry.Category = currentCategory
+			// Apply section to indented entries (2+ spaces means nested)
+			if indent >= 2 && currentSection != "" {
+				entry.Section = currentSection
 			} else if indent == 0 {
-				// Non-indented entry resets the category
-				currentCategory = ""
+				// Non-indented entry resets the section
+				currentSection = ""
 			}
 
 			entries = append(entries, entry)
