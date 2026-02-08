@@ -373,75 +373,97 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
 
 ### Phase 6: Integration Tests with Blind Project
 
-12. **Create test fixtures from blind repo:**
+12. **Test fixtures structure (source folder pattern):**
     ```
     aidocs/
     └── testdata/
-        └── blind/                    # Copy of blind docs structure
+        └── blind/
             ├── .aidocs.yaml          # Test config
-            ├── docs/
-            │   ├── SUMMARY.md        # Copied from blind
-            │   ├── records.md
-            │   ├── record_types.md
-            │   ├── keys.md
-            │   └── ...               # Other doc files
-            └── expected/             # Expected outputs
+            ├── source/               # Source files (copied fresh for each test)
+            │   ├── .aidocs.yaml
+            │   └── docs/
+            │       ├── SUMMARY.md
+            │       ├── records.md          # WITHOUT frontmatter
+            │       ├── record_types.md     # WITHOUT frontmatter
+            │       ├── keys.md             # WITHOUT frontmatter
+            │       ├── record_keys.md      # WITHOUT frontmatter
+            │       ├── dev_records.md      # WITHOUT frontmatter
+            │       ├── dev_services.md     # WITHOUT frontmatter
+            │       ├── record_encoding.md  # WITH frontmatter
+            │       ├── record_example.md   # WITH frontmatter
+            │       └── keys_example.md     # WITH frontmatter
+            └── expected/             # Expected outputs for assertions
                 ├── llms.txt
                 ├── llms-full.txt
                 └── manifest.json
     ```
 
+    **Key design:** Source files have a MIX of files WITH and WITHOUT frontmatter to test both scenarios in every test run.
+
 13. **Integration test structure:**
     ```go
     // internal/integration_test.go
-    func TestBlindProject(t *testing.T) {
-        // Setup
-        testDir := "testdata/blind"
 
-        // Run aidocs
-        err := Run(Config{
-            ContentFile: filepath.Join(testDir, "docs/SUMMARY.md"),
-            OutputDir:   testDir,
-        })
-        require.NoError(t, err)
+    // copyDir copies source to temp directory for isolated testing
+    func copyDir(src, dst string) error
 
-        // Verify outputs
-        assertFileEquals(t,
-            filepath.Join(testDir, "expected/manifest.json"),
-            filepath.Join(testDir, "docs/ai-optimization/manifest.json"))
+    // runAidocs simulates running the aidocs tool
+    func runAidocs(t *testing.T, configPath string) (string, error)
 
-        assertFileEquals(t,
-            filepath.Join(testDir, "expected/llms.txt"),
-            filepath.Join(testDir, "llms.txt"))
+    // TestGreenfieldGeneration - tests fresh generation with mixed frontmatter
+    func TestGreenfieldGeneration(t *testing.T) {
+        // Copies source/ to temp dir
+        // Runs aidocs
+        // Verifies outputs exist and are valid
+        // Checks: 3 docs WITH frontmatter, 6 WITHOUT
     }
 
-    func TestChangeDetection(t *testing.T) {
-        // Modify one file, verify only it regenerates
+    // TestBrownfieldGeneration - tests idempotent re-generation
+    func TestBrownfieldGeneration(t *testing.T) {
+        // Copies source/ to temp dir
+        // Runs aidocs TWICE
+        // Verifies outputs are identical (idempotent)
     }
 
-    func TestOrphanDetection(t *testing.T) {
-        // Add file not in SUMMARY.md, verify --show-orphans
+    // TestCachePreservesState - tests cache tracks file changes
+    func TestCachePreservesState(t *testing.T) {
+        // Runs aidocs, modifies file, runs again
+        // Verifies cache detects the change
     }
 
-    func TestFrontmatterGeneration(t *testing.T) {
-        // File without frontmatter, verify auto-generation
+    // TestExpectedOutputComparison - compares with expected fixtures
+    func TestExpectedOutputComparison(t *testing.T) {
+        // Runs aidocs
+        // Compares manifest.json with expected/manifest.json
+    }
+
+    // TestFrontmatterPreservedInOutput - verifies frontmatter data in manifest
+    func TestFrontmatterPreservedInOutput(t *testing.T) {
+        // Verifies files WITH frontmatter have metadata in manifest
+        // (description, tags, category, estimatedTokens)
     }
     ```
 
 14. **Test scenarios:**
     | Test | Description |
     |------|-------------|
-    | `TestBlindProject` | Full generation, compare with expected |
-    | `TestChangeDetection` | Modify file, verify cache |
-    | `TestOrphanDetection` | Files not in SUMMARY.md |
-    | `TestFrontmatterGeneration` | Auto-generate missing frontmatter |
-    | `TestAISummaries` | Mock Claude CLI, verify summary format |
-    | `TestInitCommand` | Create default .aidocs.yaml |
+    | `TestGreenfieldGeneration` | Fresh generation with mixed frontmatter files |
+    | `TestBrownfieldGeneration` | Idempotent re-generation (run twice, same output) |
+    | `TestCachePreservesState` | Cache detects file modifications |
+    | `TestExpectedOutputComparison` | Compare with expected fixtures |
+    | `TestFrontmatterPreservedInOutput` | Frontmatter metadata appears in manifest |
+    | `TestChangeDetection` | SHA256 hash detects content changes |
+    | `TestChangeDetectionExcludesFrontmatter` | Frontmatter changes don't trigger regeneration |
+    | `TestOrphanDetection` | Files not in SUMMARY.md detected |
+    | `TestFrontmatterExtraction` | Parse frontmatter correctly |
+    | `TestSummaryParsing` | Parse SUMMARY.md structure |
+    | `TestConfigDefaults` | Default config values |
 
 15. **Run tests:**
     ```bash
     go test ./... -v
-    go test -run TestBlindProject -v
+    go test -run TestGreenfieldGeneration -v
+    go test -run TestBrownfield -v
     ```
 
 ### Phase 7: Self-Documentation (Dogfooding)
@@ -485,11 +507,14 @@ aidocs/                              # NEW REPOSITORY
 │   │   └── instructor.go            # Claude Code CLI integration
 │   └── integration_test.go          # Integration tests
 ├── testdata/
-│   └── blind/                       # Test fixtures (copied from blind repo)
+│   └── blind/                       # Test fixtures
 │       ├── .aidocs.yaml
-│       ├── docs/
-│       │   ├── SUMMARY.md
-│       │   └── *.md
+│       ├── source/                  # Source files (copied fresh for each test)
+│       │   ├── .aidocs.yaml
+│       │   └── docs/
+│       │       ├── SUMMARY.md
+│       │       ├── *.md             # Mix: 6 WITHOUT frontmatter, 3 WITH
+│       │       └── ...
 │       └── expected/                # Expected outputs for assertions
 │           ├── llms.txt
 │           ├── llms-full.txt
