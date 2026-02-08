@@ -688,6 +688,7 @@ gendocs: gendocsbook genaidocs
 - [x] AI integration test (real Claude CLI call, skipped if not installed)
 - [x] Integration tests passing
 - [x] Test fixtures from blind repo
+- [x] Self-documentation (dogfooding): 6 docs in guide/reference categories
 
 ### Next Steps
 
@@ -696,5 +697,5 @@ gendocs: gendocsbook genaidocs
 3. **Implement core features** (SUMMARY.md parser, frontmatter, manifest generation) ✓
 4. **Write integration tests** using blind fixtures ✓
 5. **Add AI features** via Claude Code CLI ✓
-6. **Document aidocs using aidocs** (dogfooding) - TODO
+6. **Document aidocs using aidocs** (dogfooding) ✓
 7. **Publish aidocs** and integrate into blind repo via Makefile - TODO
