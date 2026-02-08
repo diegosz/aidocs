@@ -70,7 +70,7 @@ func (c *Cache) Save(path string) error {
 		return err
 	}
 
-	return os.WriteFile(path, data, 0o644)
+	return os.WriteFile(path, data, 0o600)
 }
 
 // HasChanged checks if a file's content has changed since last processing.
@@ -97,7 +97,7 @@ func (c *Cache) HasChanged(path string) (bool, error) {
 }
 
 // Update updates the cache entry for a file.
-func (c *Cache) Update(path string, summary string) error {
+func (c *Cache) Update(path, summary string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return err

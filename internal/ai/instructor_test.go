@@ -1,11 +1,11 @@
-// Package ai provides AI-powered content generation using Claude Code CLI.
-package ai
+package ai_test
 
 import (
 	"os/exec"
+	"strings"
 	"testing"
 
-	"github.com/diegosz/aidocs/internal/config"
+	"github.com/diegosz/aidocs/internal/ai"
 )
 
 func TestParseMetaJSON(t *testing.T) {
@@ -29,15 +29,15 @@ func TestParseMetaJSON(t *testing.T) {
 			wantSummary: "This document covers blind records.",
 		},
 		{
-			name: "JSON with markdown code fence",
-			input: "```json\n{\"description\": \"Test desc\", \"tags\": [\"tag1\"], \"summary\": \"Test summary\"}\n```",
+			name:        "JSON with markdown code fence",
+			input:       "```json\n{\"description\": \"Test desc\", \"tags\": [\"tag1\"], \"summary\": \"Test summary\"}\n```",
 			wantDesc:    "Test desc",
 			wantTags:    []string{"tag1"},
 			wantSummary: "Test summary",
 		},
 		{
-			name: "JSON with surrounding text",
-			input: "Here is the metadata:\n{\"description\": \"Desc\", \"tags\": [], \"summary\": \"Sum\"}\nHope this helps!",
+			name:        "JSON with surrounding text",
+			input:       "Here is the metadata:\n{\"description\": \"Desc\", \"tags\": [], \"summary\": \"Sum\"}\nHope this helps!",
 			wantDesc:    "Desc",
 			wantTags:    []string{},
 			wantSummary: "Sum",
@@ -56,7 +56,7 @@ func TestParseMetaJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			meta, err := parseMetaJSON(tt.input)
+			meta, err := ai.ParseMetaJSONForTest(tt.input)
 			if tt.wantErr {
 				if err == nil {
 					t.Error("expected error, got nil")
@@ -119,7 +119,7 @@ func TestExtractJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := extractJSON(tt.input)
+			got := ai.ExtractJSONForTest(tt.input)
 			if got != tt.want {
 				t.Errorf("extractJSON() = %q, want %q", got, tt.want)
 			}
@@ -129,15 +129,17 @@ func TestExtractJSON(t *testing.T) {
 
 func TestTruncateContent(t *testing.T) {
 	short := "short content"
-	if got := truncateContent(short, 100); got != short {
+	if got := ai.TruncateContentForTest(short, 100); got != short {
 		t.Errorf("truncateContent should not modify short content")
 	}
 
-	long := "a]" // 100 chars
-	for i := 0; i < 50; i++ {
-		long = long + "ab"
+	var longBuilder strings.Builder
+	longBuilder.WriteString("ab")
+	for range 50 {
+		longBuilder.WriteString("ab")
 	}
-	truncated := truncateContent(long, 50)
+	long := longBuilder.String()
+	truncated := ai.TruncateContentForTest(long, 50)
 	if len(truncated) <= 50 {
 		t.Error("truncated content should include truncation notice")
 	}
@@ -155,12 +157,6 @@ func TestClaudeCLIIntegration(t *testing.T) {
 		t.Skip("claude CLI not installed, skipping integration test")
 	}
 
-	cfg := config.AIConfig{
-		Enabled:           true,
-		GenerateSummaries: true,
-		GenerateTags:      true,
-	}
-
 	content := `# Blind Records
 
 Blind records are encrypted data structures that allow secure storage
@@ -175,7 +171,7 @@ master key.
 - Deterministic key derivation
 `
 
-	meta, err := GenerateMeta(cfg, content, "Blind Records")
+	meta, err := ai.GenerateMeta(content, "Blind Records")
 	if err != nil {
 		t.Fatalf("GenerateMeta failed: %v", err)
 	}

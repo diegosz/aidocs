@@ -1,10 +1,12 @@
 package internal_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -14,7 +16,7 @@ import (
 	"github.com/diegosz/aidocs/internal/parser"
 )
 
-// copyDir recursively copies a directory
+// copyDir recursively copies a directory.
 func copyDir(src, dst string) error {
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -48,7 +50,7 @@ func copyDir(src, dst string) error {
 	})
 }
 
-// runAidocs simulates running aidocs on a directory
+// runAidocs simulates running aidocs on a directory.
 func runAidocs(t *testing.T, configPath string) ([]*generator.Document, *config.Config) {
 	t.Helper()
 
@@ -105,14 +107,18 @@ func runAidocs(t *testing.T, configPath string) ([]*generator.Document, *config.
 	// Save cache
 	docCache := cache.New()
 	for _, doc := range docs {
-		docCache.Update(doc.Path, "")
+		if err := docCache.Update(doc.Path, ""); err != nil {
+			t.Errorf("Failed to update cache for %s: %v", doc.Path, err)
+		}
 	}
-	docCache.Save(cfg.Output.Cache)
+	if err := docCache.Save(cfg.Output.Cache); err != nil {
+		t.Errorf("Failed to save cache: %v", err)
+	}
 
 	return docs, cfg
 }
 
-// TestGreenfieldGeneration tests generation from scratch with mix of frontmatter/no-frontmatter files
+// TestGreenfieldGeneration tests generation from scratch with mix of frontmatter/no-frontmatter files.
 func TestGreenfieldGeneration(t *testing.T) {
 	// Copy source to temp directory
 	sourceDir := filepath.Join("..", "testdata", "blind", "source")
@@ -168,10 +174,15 @@ func TestGreenfieldGeneration(t *testing.T) {
 	// Verify manifest structure
 	manifestData, _ := os.ReadFile(cfg.Output.Manifest)
 	var manifest map[string]any
-	json.Unmarshal(manifestData, &manifest)
+	if err := json.Unmarshal(manifestData, &manifest); err != nil {
+		t.Fatalf("Failed to parse manifest: %v", err)
+	}
 
 	// Check categories include those from frontmatter
-	categories := manifest["categories"].(map[string]any)
+	categories, ok := manifest["categories"].(map[string]any)
+	if !ok {
+		t.Fatal("Expected categories to be a map")
+	}
 	if _, ok := categories["examples"]; !ok {
 		t.Error("Expected 'examples' category from frontmatter")
 	}
@@ -183,11 +194,17 @@ func TestGreenfieldGeneration(t *testing.T) {
 	}
 
 	// Verify patterns have frontmatter data where applicable
-	patterns := manifest["patterns"].([]any)
+	patterns, ok := manifest["patterns"].([]any)
+	if !ok {
+		t.Fatal("Expected patterns to be an array")
+	}
 	foundWithTags := false
 	foundWithoutTags := false
 	for _, p := range patterns {
-		pm := p.(map[string]any)
+		pm, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
 		if _, ok := pm["tags"]; ok {
 			foundWithTags = true
 		} else {
@@ -202,7 +219,7 @@ func TestGreenfieldGeneration(t *testing.T) {
 	}
 }
 
-// TestBrownfieldGeneration tests re-generation on already processed files (idempotent)
+// TestBrownfieldGeneration tests re-generation on already processed files (idempotent).
 func TestBrownfieldGeneration(t *testing.T) {
 	// Copy source to temp directory
 	sourceDir := filepath.Join("..", "testdata", "blind", "source")
@@ -237,25 +254,29 @@ func TestBrownfieldGeneration(t *testing.T) {
 
 	// Parse manifests and compare (ignoring timestamps)
 	var m1, m2 map[string]any
-	json.Unmarshal(manifest1Data, &m1)
-	json.Unmarshal(manifest2Data, &m2)
+	if err := json.Unmarshal(manifest1Data, &m1); err != nil {
+		t.Fatalf("Failed to parse manifest1: %v", err)
+	}
+	if err := json.Unmarshal(manifest2Data, &m2); err != nil {
+		t.Fatalf("Failed to parse manifest2: %v", err)
+	}
 
 	// Compare patterns
-	p1 := m1["patterns"].([]any)
-	p2 := m2["patterns"].([]any)
+	p1, _ := m1["patterns"].([]any)
+	p2, _ := m2["patterns"].([]any)
 	if len(p1) != len(p2) {
 		t.Errorf("Pattern count changed: %d -> %d", len(p1), len(p2))
 	}
 
 	// Compare categories
-	c1 := m1["categories"].(map[string]any)
-	c2 := m2["categories"].(map[string]any)
+	c1, _ := m1["categories"].(map[string]any)
+	c2, _ := m2["categories"].(map[string]any)
 	if len(c1) != len(c2) {
 		t.Errorf("Category count changed: %d -> %d", len(c1), len(c2))
 	}
 
 	// llms.txt should be identical (not regenerated if exists)
-	if string(llmsTxt1) != string(llmsTxt2) {
+	if !bytes.Equal(llmsTxt1, llmsTxt2) {
 		t.Error("llms.txt changed on second run - should be preserved")
 	}
 
@@ -265,7 +286,7 @@ func TestBrownfieldGeneration(t *testing.T) {
 	}
 }
 
-// TestCachePreservesState tests that cache correctly tracks file changes
+// TestCachePreservesState tests that cache correctly tracks file changes.
 func TestCachePreservesState(t *testing.T) {
 	// Copy source to temp directory
 	sourceDir := filepath.Join("..", "testdata", "blind", "source")
@@ -306,7 +327,9 @@ func TestCachePreservesState(t *testing.T) {
 	recordsPath := filepath.Join(summaryDir, "records.md")
 	content, _ := os.ReadFile(recordsPath)
 	newContent := string(content) + "\n\n## New Section\n\nAdded content."
-	os.WriteFile(recordsPath, []byte(newContent), 0o644)
+	if err := os.WriteFile(recordsPath, []byte(newContent), 0o600); err != nil {
+		t.Fatalf("Failed to write modified file: %v", err)
+	}
 
 	// Check only modified file is marked as changed
 	for _, entry := range entries {
@@ -325,7 +348,7 @@ func TestCachePreservesState(t *testing.T) {
 	}
 }
 
-// TestExpectedOutputComparison compares generated output with expected fixtures
+// TestExpectedOutputComparison compares generated output with expected fixtures.
 func TestExpectedOutputComparison(t *testing.T) {
 	// Copy source to temp directory
 	sourceDir := filepath.Join("..", "testdata", "blind", "source")
@@ -349,12 +372,16 @@ func TestExpectedOutputComparison(t *testing.T) {
 	}
 
 	var genM, expM map[string]any
-	json.Unmarshal(generatedManifest, &genM)
-	json.Unmarshal(expectedManifest, &expM)
+	if err := json.Unmarshal(generatedManifest, &genM); err != nil {
+		t.Fatalf("Failed to parse generated manifest: %v", err)
+	}
+	if err := json.Unmarshal(expectedManifest, &expM); err != nil {
+		t.Fatalf("Failed to parse expected manifest: %v", err)
+	}
 
 	// Compare pattern IDs
-	genPatterns := genM["patterns"].([]any)
-	expPatterns := expM["patterns"].([]any)
+	genPatterns, _ := genM["patterns"].([]any)
+	expPatterns, _ := expM["patterns"].([]any)
 
 	if len(genPatterns) != len(expPatterns) {
 		t.Errorf("Pattern count mismatch: generated %d, expected %d", len(genPatterns), len(expPatterns))
@@ -362,21 +389,26 @@ func TestExpectedOutputComparison(t *testing.T) {
 
 	expIDs := make(map[string]bool)
 	for _, p := range expPatterns {
-		pm := p.(map[string]any)
-		expIDs[pm["id"].(string)] = true
+		if pm, ok := p.(map[string]any); ok {
+			if id, ok := pm["id"].(string); ok {
+				expIDs[id] = true
+			}
+		}
 	}
 
 	for _, p := range genPatterns {
-		pm := p.(map[string]any)
-		id := pm["id"].(string)
-		if !expIDs[id] {
-			t.Errorf("Unexpected pattern ID: %s", id)
+		if pm, ok := p.(map[string]any); ok {
+			if id, ok := pm["id"].(string); ok {
+				if !expIDs[id] {
+					t.Errorf("Unexpected pattern ID: %s", id)
+				}
+			}
 		}
 	}
 
 	// Compare categories
-	genCats := genM["categories"].(map[string]any)
-	expCats := expM["categories"].(map[string]any)
+	genCats, _ := genM["categories"].(map[string]any)
+	expCats, _ := expM["categories"].(map[string]any)
 
 	for catName := range expCats {
 		if _, ok := genCats[catName]; !ok {
@@ -391,7 +423,7 @@ func TestChangeDetection(t *testing.T) {
 	// Create a test file
 	testFile := filepath.Join(tempDir, "test.md")
 	content1 := "# Test\n\nThis is test content."
-	if err := os.WriteFile(testFile, []byte(content1), 0o644); err != nil {
+	if err := os.WriteFile(testFile, []byte(content1), 0o600); err != nil {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
@@ -423,7 +455,7 @@ func TestChangeDetection(t *testing.T) {
 
 	// Modify content
 	content2 := "# Test\n\nThis is different content."
-	if err := os.WriteFile(testFile, []byte(content2), 0o644); err != nil {
+	if err := os.WriteFile(testFile, []byte(content2), 0o600); err != nil {
 		t.Fatalf("Failed to modify test file: %v", err)
 	}
 
@@ -467,7 +499,7 @@ description: "Original description"
 # Test
 
 This is test content.`
-	if err := os.WriteFile(testFile, []byte(content1), 0o644); err != nil {
+	if err := os.WriteFile(testFile, []byte(content1), 0o600); err != nil {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
@@ -487,7 +519,7 @@ tags: ["new", "tags"]
 # Test
 
 This is test content.`
-	if err := os.WriteFile(testFile, []byte(content2), 0o644); err != nil {
+	if err := os.WriteFile(testFile, []byte(content2), 0o600); err != nil {
 		t.Fatalf("Failed to modify test file: %v", err)
 	}
 
@@ -511,7 +543,7 @@ tags: ["new", "tags"]
 # Test
 
 This is DIFFERENT content.`
-	if err := os.WriteFile(testFile, []byte(content3), 0o644); err != nil {
+	if err := os.WriteFile(testFile, []byte(content3), 0o600); err != nil {
 		t.Fatalf("Failed to modify test file: %v", err)
 	}
 
@@ -529,7 +561,9 @@ This is DIFFERENT content.`
 func TestOrphanDetection(t *testing.T) {
 	tempDir := t.TempDir()
 	docsDir := filepath.Join(tempDir, "docs")
-	os.MkdirAll(docsDir, 0o755)
+	if err := os.MkdirAll(docsDir, 0o755); err != nil {
+		t.Fatalf("Failed to create docs dir: %v", err)
+	}
 
 	// Create SUMMARY.md with one reference
 	summaryContent := `# Test Project
@@ -537,13 +571,19 @@ func TestOrphanDetection(t *testing.T) {
 - [Intro](intro.md)
 `
 	summaryPath := filepath.Join(docsDir, "SUMMARY.md")
-	os.WriteFile(summaryPath, []byte(summaryContent), 0o644)
+	if err := os.WriteFile(summaryPath, []byte(summaryContent), 0o600); err != nil {
+		t.Fatalf("Failed to write SUMMARY.md: %v", err)
+	}
 
 	// Create referenced file
-	os.WriteFile(filepath.Join(docsDir, "intro.md"), []byte("# Intro"), 0o644)
+	if err := os.WriteFile(filepath.Join(docsDir, "intro.md"), []byte("# Intro"), 0o600); err != nil {
+		t.Fatalf("Failed to write intro.md: %v", err)
+	}
 
 	// Create orphan file
-	os.WriteFile(filepath.Join(docsDir, "orphan.md"), []byte("# Orphan"), 0o644)
+	if err := os.WriteFile(filepath.Join(docsDir, "orphan.md"), []byte("# Orphan"), 0o600); err != nil {
+		t.Fatalf("Failed to write orphan.md: %v", err)
+	}
 
 	entries, _ := parser.ParseSummary(summaryPath)
 	orphans, err := parser.FindOrphans(summaryPath, entries)
@@ -551,14 +591,7 @@ func TestOrphanDetection(t *testing.T) {
 		t.Fatalf("FindOrphans failed: %v", err)
 	}
 
-	found := false
-	for _, o := range orphans {
-		if o == "orphan.md" {
-			found = true
-			break
-		}
-	}
-	if !found {
+	if !slices.Contains(orphans, "orphan.md") {
 		t.Errorf("Expected to find orphan.md, got: %v", orphans)
 	}
 }
@@ -615,7 +648,7 @@ Some content without H1.`,
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			testFile := filepath.Join(tempDir, tc.name+".md")
-			if err := os.WriteFile(testFile, []byte(tc.content), 0o644); err != nil {
+			if err := os.WriteFile(testFile, []byte(tc.content), 0o600); err != nil {
 				t.Fatalf("Failed to write test file: %v", err)
 			}
 
@@ -663,7 +696,7 @@ func TestSummaryParsing(t *testing.T) {
 - [Conclusion](end.md)
 `
 	summaryPath := filepath.Join(tempDir, "SUMMARY.md")
-	if err := os.WriteFile(summaryPath, []byte(summaryContent), 0o644); err != nil {
+	if err := os.WriteFile(summaryPath, []byte(summaryContent), 0o600); err != nil {
 		t.Fatalf("Failed to write SUMMARY.md: %v", err)
 	}
 
@@ -730,14 +763,19 @@ func TestFrontmatterPreservedInOutput(t *testing.T) {
 	// Read manifest
 	manifestData, _ := os.ReadFile(cfg.Output.Manifest)
 	var manifest map[string]any
-	json.Unmarshal(manifestData, &manifest)
+	if err := json.Unmarshal(manifestData, &manifest); err != nil {
+		t.Fatalf("Failed to parse manifest: %v", err)
+	}
 
-	patterns := manifest["patterns"].([]any)
+	patterns, _ := manifest["patterns"].([]any)
 
 	// Find a pattern that should have frontmatter data
 	foundEncoding := false
 	for _, p := range patterns {
-		pm := p.(map[string]any)
+		pm, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
 		if pm["id"] == "blind-records-encoding" {
 			foundEncoding = true
 

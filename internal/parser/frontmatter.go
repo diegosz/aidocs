@@ -23,6 +23,9 @@ type Frontmatter struct {
 // h1Pattern matches H1 headers: # Title
 var h1Pattern = regexp.MustCompile(`^#\s+(.+)$`)
 
+// frontmatterDelimiter is the YAML frontmatter delimiter.
+var frontmatterDelimiter = []byte("\n---")
+
 // ExtractFrontmatter reads a markdown file and extracts its frontmatter and body.
 // If no frontmatter exists, it extracts the H1 title as the title.
 func ExtractFrontmatter(path string) (*Frontmatter, string, error) {
@@ -36,14 +39,16 @@ func ExtractFrontmatter(path string) (*Frontmatter, string, error) {
 
 	// Check for YAML frontmatter (between --- markers)
 	if bytes.HasPrefix(content, []byte("---\n")) || bytes.HasPrefix(content, []byte("---\r\n")) {
-		parts := bytes.SplitN(content[4:], []byte("\n---"), 2)
-		if len(parts) == 2 {
+		// Split into frontmatter and body at the closing ---
+		rest := content[4:] // Skip opening "---\n"
+		fmContent, bodyContent, found := bytes.Cut(rest, frontmatterDelimiter)
+		if found {
 			// Parse frontmatter
-			if err := yaml.Unmarshal(parts[0], fm); err != nil {
+			if err := yaml.Unmarshal(fmContent, fm); err != nil {
 				return nil, "", err
 			}
 			// Body is everything after the closing ---
-			body = strings.TrimPrefix(string(parts[1]), "\n")
+			body = strings.TrimPrefix(string(bodyContent), "\n")
 			body = strings.TrimPrefix(body, "\r\n")
 		}
 	}
@@ -68,7 +73,8 @@ func extractH1Title(content string) string {
 	scanner := bufio.NewScanner(strings.NewReader(content))
 	for scanner.Scan() {
 		line := scanner.Text()
-		if matches := h1Pattern.FindStringSubmatch(line); len(matches) == 2 {
+		// h1Pattern captures: [0]=full match, [1]=title
+		if matches := h1Pattern.FindStringSubmatch(line); len(matches) > 1 {
 			return strings.TrimSpace(matches[1])
 		}
 	}
@@ -94,7 +100,7 @@ func WriteFrontmatter(path string, fm *Frontmatter, body string, dryRun bool) er
 	buf.WriteString("---\n\n")
 	buf.WriteString(body)
 
-	return os.WriteFile(path, buf.Bytes(), 0o644)
+	return os.WriteFile(path, buf.Bytes(), 0o600)
 }
 
 // StripFrontmatter removes frontmatter from content, returning just the body.
@@ -106,13 +112,12 @@ func StripFrontmatter(content []byte) []byte {
 
 	// Find the closing ---
 	rest := content[4:]
-	idx := bytes.Index(rest, []byte("\n---"))
-	if idx == -1 {
+	_, body, found := bytes.Cut(rest, frontmatterDelimiter)
+	if !found {
 		return content
 	}
 
 	// Return everything after the closing ---
-	body := rest[idx+4:]
 	body = bytes.TrimPrefix(body, []byte("\n"))
 	body = bytes.TrimPrefix(body, []byte("\r\n"))
 	return body

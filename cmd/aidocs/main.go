@@ -133,7 +133,7 @@ func run() error {
 		// Generate AI summaries if enabled and needed
 		if cfg.AI.Enabled && needsProcess {
 			if cfg.AI.GenerateSummaries || cfg.AI.GenerateDescriptions || cfg.AI.GenerateTags {
-				meta, err := ai.GenerateMeta(cfg.AI, body, fm.Title)
+				meta, err := ai.GenerateMeta(body, fm.Title)
 				if err != nil {
 					if *verbose {
 						fmt.Printf("Warning: AI generation failed for %s: %v\n", docPath, err)
@@ -238,5 +238,5 @@ project:
     - "Claude Code"
     - "AI Agents"
 `
-	return os.WriteFile(".aidocs.yaml", []byte(defaultConfig), 0o644)
+	return os.WriteFile(".aidocs.yaml", []byte(defaultConfig), 0o600)
 }

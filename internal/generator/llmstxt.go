@@ -13,20 +13,26 @@ import (
 	"github.com/diegosz/aidocs/internal/config"
 )
 
+// maxDescriptionLength is the maximum length for truncated descriptions.
+const maxDescriptionLength = 100
+
 // WriteLLMsFull generates the complete document index file.
 func WriteLLMsFull(path string, docs []*Document, project config.ProjectConfig, dryRun bool) error {
 	if dryRun {
 		return nil
 	}
 
-	var lines []string
-	lines = append(lines, fmt.Sprintf("# %s - Complete Document Index", project.Name))
-	lines = append(lines, "")
-	if project.Version != "" {
-		lines = append(lines, fmt.Sprintf("Version: %s", project.Version))
+	lines := []string{
+		"# " + project.Name + " - Complete Document Index",
+		"",
 	}
-	lines = append(lines, fmt.Sprintf("Total Documents: %d", len(docs)))
-	lines = append(lines, "")
+	if project.Version != "" {
+		lines = append(lines, "Version: "+project.Version)
+	}
+	lines = append(lines,
+		fmt.Sprintf("Total Documents: %d", len(docs)),
+		"",
+	)
 
 	// Group by category
 	byCategory := make(map[string][]*Document)
@@ -57,19 +63,23 @@ func WriteLLMsFull(path string, docs []*Document, project config.ProjectConfig, 
 		})
 
 		titleCaser := cases.Title(language.English)
-		lines = append(lines, fmt.Sprintf("## %s", titleCaser.String(cat)))
-		lines = append(lines, "")
+		lines = append(lines,
+			"## "+titleCaser.String(cat),
+			"",
+		)
 
 		for _, doc := range catDocs {
-			lines = append(lines, fmt.Sprintf("### %s", doc.Frontmatter.Title))
-			lines = append(lines, fmt.Sprintf("Path: %s", doc.Path))
+			lines = append(lines,
+				"### "+doc.Frontmatter.Title,
+				"Path: "+doc.Path,
+			)
 
 			if doc.Frontmatter.Description != "" {
-				lines = append(lines, fmt.Sprintf("Description: %s", doc.Frontmatter.Description))
+				lines = append(lines, "Description: "+doc.Frontmatter.Description)
 			}
 
 			if len(doc.Frontmatter.Tags) > 0 {
-				lines = append(lines, fmt.Sprintf("Tags: %s", strings.Join(doc.Frontmatter.Tags, ", ")))
+				lines = append(lines, "Tags: "+strings.Join(doc.Frontmatter.Tags, ", "))
 			}
 
 			if doc.Frontmatter.EstimatedTokens > 0 {
@@ -77,7 +87,7 @@ func WriteLLMsFull(path string, docs []*Document, project config.ProjectConfig, 
 			}
 
 			if doc.Frontmatter.Summary != "" {
-				lines = append(lines, fmt.Sprintf("Summary: %s", doc.Frontmatter.Summary))
+				lines = append(lines, "Summary: "+doc.Frontmatter.Summary)
 			}
 
 			lines = append(lines, "")
@@ -91,7 +101,7 @@ func WriteLLMsFull(path string, docs []*Document, project config.ProjectConfig, 
 	}
 
 	content := strings.Join(lines, "\n")
-	return os.WriteFile(path, []byte(content), 0o644)
+	return os.WriteFile(path, []byte(content), 0o600)
 }
 
 // WriteLLMsTxt generates or updates the root llms.txt navigation file.
@@ -107,17 +117,22 @@ func WriteLLMsTxt(path string, docs []*Document, cfg *config.Config, dryRun bool
 		return nil
 	}
 
-	var lines []string
-	lines = append(lines, fmt.Sprintf("# %s", cfg.Project.Name))
-	lines = append(lines, "")
-
-	if cfg.Project.Description != "" {
-		lines = append(lines, fmt.Sprintf("> %s", cfg.Project.Description))
-		lines = append(lines, "")
+	lines := []string{
+		"# " + cfg.Project.Name,
+		"",
 	}
 
-	lines = append(lines, "## For AI Agents")
-	lines = append(lines, "")
+	if cfg.Project.Description != "" {
+		lines = append(lines,
+			"> "+cfg.Project.Description,
+			"",
+		)
+	}
+
+	lines = append(lines,
+		"## For AI Agents",
+		"",
+	)
 
 	// Add paths relative to llms.txt location
 	llmsDir := filepath.Dir(path)
@@ -125,12 +140,13 @@ func WriteLLMsTxt(path string, docs []*Document, cfg *config.Config, dryRun bool
 	manifestRel, _ := filepath.Rel(llmsDir, cfg.Output.Manifest)
 	llmsFullRel, _ := filepath.Rel(llmsDir, cfg.Output.LLMsFull)
 
-	lines = append(lines, fmt.Sprintf("- Pattern Manifest: /%s", manifestRel))
-	lines = append(lines, fmt.Sprintf("- Full Index: /%s", llmsFullRel))
-	lines = append(lines, "")
-
-	lines = append(lines, "## Documentation")
-	lines = append(lines, "")
+	lines = append(lines,
+		"- Pattern Manifest: /"+manifestRel,
+		"- Full Index: /"+llmsFullRel,
+		"",
+		"## Documentation",
+		"",
+	)
 
 	// Add document links
 	for _, doc := range docs {
@@ -139,8 +155,8 @@ func WriteLLMsTxt(path string, docs []*Document, cfg *config.Config, dryRun bool
 		if desc == "" && doc.Frontmatter.Summary != "" {
 			// Truncate summary for description
 			desc = doc.Frontmatter.Summary
-			if len(desc) > 100 {
-				desc = desc[:97] + "..."
+			if len(desc) > maxDescriptionLength {
+				desc = desc[:maxDescriptionLength-3] + "..."
 			}
 		}
 
@@ -155,9 +171,11 @@ func WriteLLMsTxt(path string, docs []*Document, cfg *config.Config, dryRun bool
 
 	// Add optimized for section
 	if len(cfg.Project.OptimizedFor) > 0 {
-		lines = append(lines, "---")
-		lines = append(lines, "")
-		lines = append(lines, fmt.Sprintf("Optimized for: %s", strings.Join(cfg.Project.OptimizedFor, ", ")))
+		lines = append(lines,
+			"---",
+			"",
+			"Optimized for: "+strings.Join(cfg.Project.OptimizedFor, ", "),
+		)
 	}
 
 	// Ensure directory exists
@@ -167,5 +185,5 @@ func WriteLLMsTxt(path string, docs []*Document, cfg *config.Config, dryRun bool
 	}
 
 	content := strings.Join(lines, "\n")
-	return os.WriteFile(path, []byte(content), 0o644)
+	return os.WriteFile(path, []byte(content), 0o600)
 }

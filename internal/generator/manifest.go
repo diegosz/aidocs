@@ -130,7 +130,7 @@ func WriteManifest(path string, m *Manifest, dryRun bool) error {
 		return err
 	}
 
-	return os.WriteFile(path, data, 0o644)
+	return os.WriteFile(path, data, 0o600)
 }
 
 // titleToID converts a title to a URL-friendly ID.

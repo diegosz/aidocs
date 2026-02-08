@@ -57,8 +57,9 @@ func ParseSummary(path string) ([]SummaryEntry, error) {
 		}
 
 		// Parse markdown link
+		// linkPattern captures: [0]=full match, [1]=title, [2]=path
 		matches := linkPattern.FindStringSubmatch(line)
-		if len(matches) == 3 {
+		if len(matches) > 2 { //nolint:mnd // regex capture groups
 			// Determine nesting level by leading whitespace/indentation
 			indent := len(line) - len(strings.TrimLeft(line, " \t"))
 

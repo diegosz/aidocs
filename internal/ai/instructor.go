@@ -2,14 +2,16 @@
 package ai
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
-
-	"github.com/diegosz/aidocs/internal/config"
 )
+
+// maxContentLength is the maximum content length to send to the LLM.
+const maxContentLength = 4000
 
 // GeneratedMeta contains AI-generated metadata for a document.
 type GeneratedMeta struct {
@@ -19,7 +21,7 @@ type GeneratedMeta struct {
 }
 
 // GenerateMeta generates metadata for document content using Claude Code CLI.
-func GenerateMeta(cfg config.AIConfig, content, title string) (*GeneratedMeta, error) {
+func GenerateMeta(content, title string) (*GeneratedMeta, error) {
 	prompt := fmt.Sprintf(`Analyze this documentation and provide metadata in JSON format.
 
 Title: %s
@@ -30,14 +32,14 @@ Content:
 Respond with ONLY a JSON object (no markdown, no explanation, no code fences) with these fields:
 - "description": one-line description (max 100 chars)
 - "tags": array of 3-5 relevant topic tags (lowercase, hyphenated)
-- "summary": 2-3 sentence summary of key concepts`, title, truncateContent(content, 4000))
+- "summary": 2-3 sentence summary of key concepts`, title, truncateContent(content, maxContentLength))
 
 	// Use Claude Code CLI
-	return callClaudeCLI(prompt)
+	return callClaudeCLI(context.Background(), prompt)
 }
 
 // callClaudeCLI uses the claude command-line tool to generate responses.
-func callClaudeCLI(prompt string) (*GeneratedMeta, error) {
+func callClaudeCLI(ctx context.Context, prompt string) (*GeneratedMeta, error) {
 	// Check if claude CLI is available
 	claudePath, err := exec.LookPath("claude")
 	if err != nil {
@@ -45,10 +47,11 @@ func callClaudeCLI(prompt string) (*GeneratedMeta, error) {
 	}
 
 	// Run claude with --print flag for non-interactive mode
-	cmd := exec.Command(claudePath, "-p", prompt)
+	cmd := exec.CommandContext(ctx, claudePath, "-p", prompt)
 	output, err := cmd.Output()
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			return nil, fmt.Errorf("claude CLI error: %s", string(exitErr.Stderr))
 		}
 		return nil, fmt.Errorf("claude CLI failed: %w", err)
@@ -70,7 +73,7 @@ func parseMetaJSON(text string) (*GeneratedMeta, error) {
 	return &meta, nil
 }
 
-// extractJSON attempts to find a JSON object in the text
+// extractJSON attempts to find a JSON object in the text.
 func extractJSON(text string) string {
 	// Remove markdown code fences if present
 	text = strings.TrimPrefix(text, "```json")
@@ -105,7 +108,7 @@ func extractJSON(text string) string {
 	return text
 }
 
-// truncateContent limits content size to avoid overwhelming the LLM
+// truncateContent limits content size to avoid overwhelming the LLM.
 func truncateContent(content string, maxLen int) string {
 	if len(content) <= maxLen {
 		return content
