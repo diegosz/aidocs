@@ -1,0 +1,83 @@
+{
+  "knowledgeBase": {
+    "name": "Blind Record System",
+    "description": "Secure record management with blind encryption",
+    "version": "v0.4.96",
+    "generatedBy": "aidocs",
+    "optimizedFor": ["Claude Code", "BMAD BMM", "AI Agents"]
+  },
+  "patterns": [
+    {
+      "id": "blind-records",
+      "name": "Blind Records"
+    },
+    {
+      "id": "record-types",
+      "name": "Record Types"
+    },
+    {
+      "id": "blind-keys",
+      "name": "Blind Keys"
+    },
+    {
+      "id": "blind-records-keys",
+      "name": "Blind Records Keys"
+    },
+    {
+      "id": "blind-records-encoding",
+      "name": "Blind Records Encoding",
+      "description": "Encoding format for blind records",
+      "category": "reference",
+      "tags": ["encoding", "format", "binary"],
+      "estimatedTokens": 450
+    },
+    {
+      "id": "example-blind-record",
+      "name": "Example Blind Record",
+      "description": "Example showing a complete blind record structure",
+      "category": "examples",
+      "tags": ["example", "record", "tutorial"],
+      "estimatedTokens": 380
+    },
+    {
+      "id": "example-blind-keys",
+      "name": "Example Blind Keys",
+      "description": "Example showing key generation and usage",
+      "category": "examples",
+      "tags": ["example", "keys", "encryption"],
+      "estimatedTokens": 420
+    },
+    {
+      "id": "development-notes",
+      "name": "Development Notes",
+      "category": "WIP"
+    },
+    {
+      "id": "blind-record-services-wip",
+      "name": "Blind Record Services WIP",
+      "category": "WIP"
+    }
+  ],
+  "categories": {
+    "WIP": {
+      "count": 2,
+      "documents": ["blind-record-services-wip", "development-notes"]
+    },
+    "examples": {
+      "count": 2,
+      "documents": ["example-blind-keys", "example-blind-record"]
+    },
+    "general": {
+      "count": 4,
+      "documents": ["blind-keys", "blind-records", "blind-records-keys", "record-types"]
+    },
+    "reference": {
+      "count": 1,
+      "documents": ["blind-records-encoding"]
+    }
+  },
+  "metadata": {
+    "totalDocuments": 9,
+    "averageTokensPerDoc": 138
+  }
+}

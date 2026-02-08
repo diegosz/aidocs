@@ -1,0 +1,242 @@
+// Package main provides the aidocs CLI tool for generating LLM-friendly documentation.
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/diegosz/aidocs/internal/ai"
+	"github.com/diegosz/aidocs/internal/cache"
+	"github.com/diegosz/aidocs/internal/config"
+	"github.com/diegosz/aidocs/internal/generator"
+	"github.com/diegosz/aidocs/internal/parser"
+)
+
+var (
+	configFile  = flag.String("config", ".aidocs.yaml", "Config file path")
+	force       = flag.Bool("force", false, "Regenerate all, ignore cache")
+	dryRun      = flag.Bool("dry-run", false, "Preview without writing")
+	showOrphans = flag.Bool("show-orphans", false, "List files not in SUMMARY.md")
+	initConfig  = flag.Bool("init", false, "Create default .aidocs.yaml")
+	verbose     = flag.Bool("v", false, "Verbose output")
+)
+
+func main() {
+	flag.Parse()
+
+	if *initConfig {
+		if err := createDefaultConfig(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating config: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("Created .aidocs.yaml")
+		return
+	}
+
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	// Load configuration
+	cfg, err := config.Load(*configFile)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
+	if *verbose {
+		fmt.Printf("Using config: %s\n", *configFile)
+		fmt.Printf("Content source: %s\n", cfg.Content)
+	}
+
+	// Parse SUMMARY.md
+	entries, err := parser.ParseSummary(cfg.Content)
+	if err != nil {
+		return fmt.Errorf("parse summary: %w", err)
+	}
+
+	if *verbose {
+		fmt.Printf("Found %d entries in SUMMARY.md\n", len(entries))
+	}
+
+	// Check for orphan files if requested
+	if *showOrphans {
+		orphans, err := parser.FindOrphans(cfg.Content, entries)
+		if err != nil {
+			return fmt.Errorf("find orphans: %w", err)
+		}
+		if len(orphans) > 0 {
+			fmt.Println("Orphan files (not in SUMMARY.md):")
+			for _, o := range orphans {
+				fmt.Printf("  - %s\n", o)
+			}
+		} else {
+			fmt.Println("No orphan files found")
+		}
+		return nil
+	}
+
+	// Load cache
+	var docCache *cache.Cache
+	if !*force {
+		docCache, err = cache.Load(cfg.Output.Cache)
+		if err != nil && *verbose {
+			fmt.Printf("Warning: could not load cache: %v\n", err)
+		}
+	}
+	if docCache == nil {
+		docCache = cache.New()
+	}
+
+	// Process each document
+	docs := make([]*generator.Document, 0, len(entries))
+	summaryDir := filepath.Dir(cfg.Content)
+
+	for _, entry := range entries {
+		docPath := filepath.Join(summaryDir, entry.Path)
+
+		// Check if file needs processing
+		needsProcess := *force
+		if !needsProcess {
+			changed, err := docCache.HasChanged(docPath)
+			if err != nil {
+				if *verbose {
+					fmt.Printf("Warning: cache check failed for %s: %v\n", docPath, err)
+				}
+				needsProcess = true
+			} else {
+				needsProcess = changed
+			}
+		}
+
+		// Extract or generate frontmatter
+		fm, body, err := parser.ExtractFrontmatter(docPath)
+		if err != nil {
+			fmt.Printf("Warning: skipping %s: %v\n", docPath, err)
+			continue
+		}
+
+		// Use entry title if frontmatter title is missing
+		if fm.Title == "" {
+			fm.Title = entry.Title
+		}
+
+		// Use entry category if frontmatter category is missing
+		if fm.Category == "" && entry.Category != "" {
+			fm.Category = entry.Category
+		}
+
+		// Generate AI summaries if enabled and needed
+		if cfg.AI.Enabled && needsProcess {
+			if cfg.AI.GenerateSummaries || cfg.AI.GenerateDescriptions || cfg.AI.GenerateTags {
+				meta, err := ai.GenerateMeta(cfg.AI, body, fm.Title)
+				if err != nil {
+					if *verbose {
+						fmt.Printf("Warning: AI generation failed for %s: %v\n", docPath, err)
+					}
+				} else {
+					if cfg.AI.GenerateDescriptions && fm.Description == "" {
+						fm.Description = meta.Description
+					}
+					if cfg.AI.GenerateTags && len(fm.Tags) == 0 {
+						fm.Tags = meta.Tags
+					}
+					if cfg.AI.GenerateSummaries {
+						fm.Summary = meta.Summary
+					}
+				}
+			}
+
+			// Update frontmatter in file if configured
+			if cfg.AI.GenerateMissingFrontmatter {
+				if err := parser.WriteFrontmatter(docPath, fm, body, *dryRun); err != nil {
+					fmt.Printf("Warning: could not update frontmatter in %s: %v\n", docPath, err)
+				} else if *verbose && !*dryRun {
+					fmt.Printf("Updated frontmatter: %s\n", docPath)
+				}
+			}
+		}
+
+		// Update cache
+		if err := docCache.Update(docPath, fm.Summary); err != nil && *verbose {
+			fmt.Printf("Warning: cache update failed for %s: %v\n", docPath, err)
+		}
+
+		docs = append(docs, &generator.Document{
+			Path:        docPath,
+			Frontmatter: fm,
+			Category:    entry.Category,
+		})
+	}
+
+	if *dryRun {
+		fmt.Println("Dry-run mode: no files will be written")
+	}
+
+	// Generate manifest.json
+	manifest := generator.GenerateManifest(docs, cfg.Project)
+	if err := generator.WriteManifest(cfg.Output.Manifest, manifest, *dryRun); err != nil {
+		return fmt.Errorf("write manifest: %w", err)
+	}
+	fmt.Printf("Generated manifest.json (%d documents)\n", len(docs))
+
+	// Generate llms-full.txt
+	if err := generator.WriteLLMsFull(cfg.Output.LLMsFull, docs, cfg.Project, *dryRun); err != nil {
+		return fmt.Errorf("write llms-full.txt: %w", err)
+	}
+	fmt.Println("Generated llms-full.txt")
+
+	// Generate or update llms.txt at project root if missing
+	if err := generator.WriteLLMsTxt(cfg.Output.LLMsTxt, docs, cfg, *dryRun); err != nil {
+		return fmt.Errorf("write llms.txt: %w", err)
+	}
+	fmt.Println("Generated llms.txt")
+
+	// Save cache
+	if !*dryRun {
+		if err := docCache.Save(cfg.Output.Cache); err != nil {
+			fmt.Printf("Warning: could not save cache: %v\n", err)
+		}
+	}
+
+	fmt.Println("Done!")
+	return nil
+}
+
+func createDefaultConfig() error {
+	defaultConfig := `# .aidocs.yaml - aidocs configuration
+# All paths relative to this file's location
+
+# Content source - defines structure and files to process
+content: "docs/SUMMARY.md"
+
+# Output settings
+output:
+  llms_txt: "llms.txt"                    # Root navigation (auto-generated if missing)
+  llms_full: "docs/llms-full.txt"         # Complete index
+  manifest: "docs/ai-optimization/manifest.json"
+  cache: "docs/ai-optimization/.cache.json"
+
+# AI features (uses Claude Code CLI - no API key needed)
+ai:
+  enabled: false                          # Enable AI-powered features
+  generate_summaries: true                # Generate AI summaries for each doc
+  generate_missing_frontmatter: true      # Add frontmatter to files missing it
+  generate_descriptions: true             # Generate missing descriptions
+  generate_tags: true                     # Generate missing tags
+
+# Project metadata
+project:
+  name: "My Project"
+  description: "Project description"
+  version: ""                             # Empty = use git tag
+  optimized_for:
+    - "Claude Code"
+    - "AI Agents"
+`
+	return os.WriteFile(".aidocs.yaml", []byte(defaultConfig), 0o644)
+}

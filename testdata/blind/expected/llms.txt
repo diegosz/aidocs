@@ -1,0 +1,24 @@
+# Blind Record System
+
+> Secure record management with blind encryption
+
+## For AI Agents
+
+- Pattern Manifest: /docs/ai-optimization/manifest.json
+- Full Index: /docs/llms-full.txt
+
+## Documentation
+
+- [Blind Records](docs/records.md)
+- [Record Types](docs/record_types.md)
+- [Blind Keys](docs/keys.md)
+- [Blind Records Keys](docs/record_keys.md)
+- [Blind Records Encoding](docs/record_encoding.md)
+- [Example Blind Record](docs/record_example.md)
+- [Example Blind Keys](docs/keys_example.md)
+- [Development Notes](docs/dev_records.md)
+- [Blind Record Services WIP](docs/dev_services.md)
+
+---
+
+Optimized for: Claude Code, BMAD BMM, AI Agents

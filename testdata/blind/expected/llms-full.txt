@@ -1,0 +1,35 @@
+# Blind Record System - Complete Document Index
+
+Version: v0.4.96
+Total Documents: 9
+
+## General
+
+### Blind Keys
+Path: docs/keys.md
+
+### Example Blind Keys
+Path: docs/keys_example.md
+
+### Blind Records Encoding
+Path: docs/record_encoding.md
+
+### Example Blind Record
+Path: docs/record_example.md
+
+### Blind Records Keys
+Path: docs/record_keys.md
+
+### Record Types
+Path: docs/record_types.md
+
+### Blind Records
+Path: docs/records.md
+
+## WIP
+
+### Development Notes
+Path: docs/dev_records.md
+
+### Blind Record Services WIP
+Path: docs/dev_services.md

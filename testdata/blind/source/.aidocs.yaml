@@ -1,0 +1,21 @@
+# .aidocs.yaml - Test configuration for blind project
+content: "docs/SUMMARY.md"
+
+output:
+  llms_txt: "llms.txt"
+  llms_full: "docs/llms-full.txt"
+  manifest: "docs/ai-optimization/manifest.json"
+  cache: "docs/ai-optimization/.cache.json"
+
+# AI disabled for tests
+ai:
+  enabled: false
+
+project:
+  name: "Blind Record System"
+  description: "Secure record management with blind encryption"
+  version: "v0.4.96"
+  optimized_for:
+    - "Claude Code"
+    - "BMAD BMM"
+    - "AI Agents"
