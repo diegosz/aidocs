@@ -458,6 +458,10 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
     | `TestFrontmatterExtraction` | Parse frontmatter correctly |
     | `TestSummaryParsing` | Parse SUMMARY.md structure |
     | `TestConfigDefaults` | Default config values |
+    | `TestParseMetaJSON` | Parse JSON from various Claude response formats |
+    | `TestExtractJSON` | Extract JSON from markdown, surrounding text |
+    | `TestTruncateContent` | Content truncation for large documents |
+    | `TestClaudeCLIIntegration` | Real Claude CLI call (skipped if not installed) |
 
 15. **Run tests:**
     ```bash
@@ -680,6 +684,8 @@ gendocs: gendocsbook genaidocs
 - [x] SHA256 cache for change detection (excludes frontmatter)
 - [x] Orphan file detection
 - [x] AI integration via Claude Code CLI (`claude -p`) - no API key needed
+- [x] AI unit tests (JSON parsing, extraction, truncation)
+- [x] AI integration test (real Claude CLI call, skipped if not installed)
 - [x] Integration tests passing
 - [x] Test fixtures from blind repo
 
