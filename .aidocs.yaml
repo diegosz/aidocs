@@ -1,0 +1,21 @@
+# .aidocs.yaml - aidocs self-documentation (dogfooding)
+content: "docs/SUMMARY.md"
+
+output:
+  llms_txt: "llms.txt"
+  llms_full: "docs/llms-full.txt"
+  manifest: "docs/ai-optimization/manifest.json"
+  cache: "docs/ai-optimization/.cache.json"
+
+# AI disabled for reproducible builds
+ai:
+  enabled: false
+
+project:
+  name: "aidocs"
+  description: "AI-optimized documentation generator for LLM-friendly discovery files"
+  version: ""
+  optimized_for:
+    - "Claude Code"
+    - "AI Agents"
+    - "LLM Tools"
