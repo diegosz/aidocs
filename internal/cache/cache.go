@@ -21,10 +21,10 @@ type Cache struct {
 
 // FileCache stores cache data for a single file.
 type FileCache struct {
-	ContentHash     string    `json:"contentHash"`
-	FrontmatterHash string    `json:"frontmatterHash,omitempty"`
-	Summary         string    `json:"summary,omitempty"`
-	GeneratedAt     time.Time `json:"generatedAt"`
+	FileHash    string    `json:"fileHash"`              // Hash of entire file (quick check)
+	ContentHash string    `json:"contentHash"`           // Hash excluding frontmatter (content change detection)
+	Summary     string    `json:"summary,omitempty"`     // Cached AI summary
+	GeneratedAt time.Time `json:"generatedAt"`
 }
 
 // New creates a new empty cache.
@@ -75,25 +75,37 @@ func (c *Cache) Save(path string) error {
 
 // HasChanged checks if a file's content has changed since last processing.
 // Returns true if the file has changed or is not in cache.
+// Uses two-level hashing: first checks fileHash (quick), then contentHash if needed.
 func (c *Cache) HasChanged(path string) (bool, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return true, err
 	}
 
-	// Get current hash
-	hash, err := ContentHash(path)
-	if err != nil {
-		return true, err
-	}
-
-	// Check against cached hash
+	// Check if file is in cache
 	cached, ok := c.Files[absPath]
 	if !ok {
 		return true, nil
 	}
 
-	return cached.ContentHash != hash, nil
+	// Read file once
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return true, err
+	}
+
+	// Quick check: compare full file hash first
+	fileHash := hashBytes(content)
+	if cached.FileHash == fileHash {
+		// File unchanged - no need to parse frontmatter
+		return false, nil
+	}
+
+	// File changed - check if actual content (excluding frontmatter) changed
+	body := parser.StripFrontmatter(content)
+	contentHash := hashBytes(body)
+
+	return cached.ContentHash != contentHash, nil
 }
 
 // Update updates the cache entry for a file.
@@ -103,13 +115,18 @@ func (c *Cache) Update(path, summary string) error {
 		return err
 	}
 
-	hash, err := ContentHash(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
+	fileHash := hashBytes(content)
+	body := parser.StripFrontmatter(content)
+	contentHash := hashBytes(body)
+
 	c.Files[absPath] = &FileCache{
-		ContentHash: hash,
+		FileHash:    fileHash,
+		ContentHash: contentHash,
 		Summary:     summary,
 		GeneratedAt: time.Now(),
 	}
@@ -135,7 +152,11 @@ func ContentHash(path string) (string, error) {
 
 	// Strip frontmatter - we only hash the body content
 	body := parser.StripFrontmatter(content)
+	return hashBytes(body), nil
+}
 
-	hash := sha256.Sum256(body)
-	return hex.EncodeToString(hash[:]), nil
+// hashBytes computes SHA256 hash of bytes.
+func hashBytes(data []byte) string {
+	hash := sha256.Sum256(data)
+	return hex.EncodeToString(hash[:])
 }
