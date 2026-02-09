@@ -1,7 +1,7 @@
 ---
 title: "Configuration"
 description: "Complete configuration reference for .aidocs.yaml"
-category: "reference"
+section: "reference"
 tags: ["config", "yaml", "settings"]
 estimatedTokens: 500
 ---
@@ -22,9 +22,9 @@ content: "docs/SUMMARY.md"
 output:
   llms_txt: "llms.txt"                    # Root navigation file
   llms_full: "docs/llms-full.txt"         # Complete document index
-  manifest: "docs/ai-optimization/manifest.json"
-  tags: "docs/ai-optimization/tags.json"  # Aggregated tags index
-  cache: "docs/ai-optimization/.cache.json"
+  manifest: "docs/_ai/manifest.json"
+  tags: "docs/_ai/tags.json"              # Aggregated tags index
+  cache: "docs/_ai/.cache.json"
 
 # AI features (uses Claude Code CLI)
 ai:
@@ -38,7 +38,6 @@ ai:
 project:
   name: "My Project"
   description: "Project description"
-  version: ""                             # Empty = use git tag
   optimized_for:
     - "Claude Code"
     - "AI Agents"
@@ -54,9 +53,9 @@ Path to your SUMMARY.md file. This file defines the documentation structure.
 
 - `llms_txt`: Path for the root llms.txt file (default: `llms.txt`)
 - `llms_full`: Path for the complete index (default: `docs/llms-full.txt`)
-- `manifest`: Path for manifest.json (default: `docs/ai-optimization/manifest.json`)
-- `tags`: Path for tags.json (default: `docs/ai-optimization/tags.json`)
-- `cache`: Path for cache file (default: `docs/ai-optimization/.cache.json`)
+- `manifest`: Path for manifest.json (default: `docs/_ai/manifest.json`)
+- `tags`: Path for tags.json (default: `docs/_ai/tags.json`)
+- `cache`: Path for cache file (default: `docs/_ai/.cache.json`)
 
 ### ai
 
@@ -74,5 +73,4 @@ Metadata included in generated files:
 
 - `name`: Project name
 - `description`: Short description
-- `version`: Version string (empty uses git tag)
 - `optimized_for`: List of target AI systems

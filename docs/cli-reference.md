@@ -1,7 +1,7 @@
 ---
 title: "CLI Reference"
 description: "Command-line interface reference for aidocs"
-category: "reference"
+section: "reference"
 tags: ["cli", "commands", "flags"]
 estimatedTokens: 350
 ---

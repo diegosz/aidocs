@@ -1,7 +1,7 @@
 ---
 title: "Frontmatter Specification"
 description: "YAML frontmatter format for aidocs documentation files"
-category: "reference"
+section: "reference"
 tags: ["frontmatter", "yaml", "metadata", "specification"]
 estimatedTokens: 400
 ---
@@ -16,7 +16,7 @@ aidocs extracts metadata from YAML frontmatter at the top of markdown files.
 ---
 title: "Document Title"
 description: "One-line description (max 100 chars)"
-category: "reference"
+section: "reference"
 tags: ["tag1", "tag2", "tag3"]
 estimatedTokens: 500
 summary: "2-3 sentence summary of the document content."
@@ -33,7 +33,7 @@ Content starts here...
 |-------|------|----------|-------------|
 | `title` | string | No | Document title (falls back to H1) |
 | `description` | string | No | One-line description |
-| `category` | string | No | Document category |
+| `section` | string | No | Document section |
 | `tags` | string[] | No | Topic tags |
 | `estimatedTokens` | int | No | Estimated token count |
 | `summary` | string | No | AI-generated summary |
@@ -44,17 +44,17 @@ Content starts here...
 2. If document has H1 header, prefer H1 (authoritative)
 3. Fall back to SUMMARY.md link text
 
-## Categories
+## Sections
 
-Categories can come from:
-1. Frontmatter `category` field
+Sections can come from:
+1. Frontmatter `section` field
 2. Parent heading in SUMMARY.md (for nested entries)
 
 ## Without Frontmatter
 
 Files without frontmatter are still processed:
 - Title extracted from H1 header
-- Category from SUMMARY.md structure
+- Section from SUMMARY.md structure
 - Other fields remain empty
 
 Enable `ai.generate_missing_frontmatter` to auto-add frontmatter.

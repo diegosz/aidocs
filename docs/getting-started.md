@@ -1,7 +1,7 @@
 ---
 title: "Getting Started"
 description: "Quick start guide for aidocs - generate LLM-friendly documentation"
-category: "guide"
+section: "guide"
 tags: ["quickstart", "installation", "setup"]
 estimatedTokens: 400
 ---
@@ -44,7 +44,7 @@ aidocs
 This creates:
 - `llms.txt` - Root navigation for AI agents
 - `docs/llms-full.txt` - Complete document index
-- `docs/ai-optimization/manifest.json` - Structured metadata
+- `docs/_ai/manifest.json` - Structured metadata
 
 ## How It Works
 

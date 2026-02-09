@@ -1,7 +1,7 @@
 ---
 title: "AI Features"
 description: "AI-powered documentation enhancement using Claude Code CLI"
-category: "guide"
+section: "guide"
 tags: ["ai", "claude", "summaries", "automation"]
 estimatedTokens: 450
 ---

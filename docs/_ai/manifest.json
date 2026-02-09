@@ -1,7 +1,7 @@
 {
   "knowledgeBase": {
     "description": "AI-optimized documentation generator for LLM-friendly discovery files",
-    "generatedAt": "2026-02-09T12:48:09Z",
+    "generatedAt": "2026-02-09T12:52:07Z",
     "generatedBy": "aidocs",
     "name": "aidocs",
     "optimizedFor": [
@@ -19,6 +19,7 @@
       "paths": {
         "doc": "/home/diegos/_dev/github/diegosz/aidocs/docs/getting-started.md"
       },
+      "section": "guide",
       "tags": [
         "quickstart",
         "installation",
@@ -33,6 +34,7 @@
       "paths": {
         "doc": "/home/diegos/_dev/github/diegosz/aidocs/docs/configuration.md"
       },
+      "section": "reference",
       "tags": [
         "config",
         "yaml",
@@ -47,6 +49,7 @@
       "paths": {
         "doc": "/home/diegos/_dev/github/diegosz/aidocs/docs/ai-features.md"
       },
+      "section": "guide",
       "tags": [
         "ai",
         "claude",
@@ -62,6 +65,7 @@
       "paths": {
         "doc": "/home/diegos/_dev/github/diegosz/aidocs/docs/output-files.md"
       },
+      "section": "reference",
       "tags": [
         "output",
         "manifest",
@@ -77,7 +81,7 @@
       "paths": {
         "doc": "/home/diegos/_dev/github/diegosz/aidocs/docs/cli-reference.md"
       },
-      "section": "Reference",
+      "section": "reference",
       "tags": [
         "cli",
         "commands",
@@ -92,7 +96,7 @@
       "paths": {
         "doc": "/home/diegos/_dev/github/diegosz/aidocs/docs/frontmatter-spec.md"
       },
-      "section": "Reference",
+      "section": "reference",
       "tags": [
         "frontmatter",
         "yaml",
@@ -102,19 +106,19 @@
     }
   ],
   "sections": {
-    "Reference": {
+    "guide": {
       "count": 2,
       "documents": [
-        "cli-reference",
-        "frontmatter-specification"
+        "ai-features",
+        "getting-started"
       ]
     },
-    "general": {
+    "reference": {
       "count": 4,
       "documents": [
-        "ai-features",
+        "cli-reference",
         "configuration",
-        "getting-started",
+        "frontmatter-specification",
         "output-files"
       ]
     }
