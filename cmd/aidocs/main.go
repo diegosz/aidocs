@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 
 	"github.com/diegosz/aidocs/internal/ai"
 	"github.com/diegosz/aidocs/internal/cache"
@@ -15,16 +16,22 @@ import (
 )
 
 var (
-	configFile  = flag.String("config", ".aidocs.yaml", "Config file path")
-	force       = flag.Bool("force", false, "Regenerate all, ignore cache")
-	dryRun      = flag.Bool("dry-run", false, "Preview without writing")
-	showOrphans = flag.Bool("show-orphans", false, "List files not in SUMMARY.md")
-	initConfig  = flag.Bool("init", false, "Create default .aidocs.yaml")
-	verbose     = flag.Bool("v", false, "Verbose output")
+	configFile   = flag.String("config", ".aidocs.yaml", "Config file path")
+	force        = flag.Bool("force", false, "Regenerate all, ignore cache")
+	dryRun       = flag.Bool("dry-run", false, "Preview without writing")
+	showOrphans  = flag.Bool("show-orphans", false, "List files not in SUMMARY.md")
+	initConfig   = flag.Bool("init", false, "Create default .aidocs.yaml")
+	verbose      = flag.Bool("v", false, "Verbose output")
+	showVersion  = flag.Bool("version", false, "Show version information")
 )
 
 func main() {
 	flag.Parse()
+
+	if *showVersion {
+		printVersion()
+		return
+	}
 
 	if *initConfig {
 		if err := createDefaultConfig(); err != nil {
@@ -275,10 +282,19 @@ ai:
 project:
   name: "My Project"
   description: "Project description"
-  version: ""                             # Empty = use git tag
   optimized_for:
     - "Claude Code"
     - "AI Agents"
 `
 	return os.WriteFile(".aidocs.yaml", []byte(defaultConfig), 0o600)
+}
+
+func printVersion() {
+	version := "dev"
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if info.Main.Version != "" && info.Main.Version != "(devel)" {
+			version = info.Main.Version
+		}
+	}
+	fmt.Printf("aidocs %s\n", version)
 }
