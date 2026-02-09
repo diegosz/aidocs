@@ -126,12 +126,12 @@ func runAidocs(t *testing.T, configPath string) ([]*generator.Document, *config.
 
 // TestGreenfieldGeneration tests generation from scratch with mix of frontmatter/no-frontmatter files.
 func TestGreenfieldGeneration(t *testing.T) {
-	// Copy source to temp directory
-	sourceDir := filepath.Join("..", "testdata", "blind", "source")
+	// Copy input to temp directory
+	inputDir := filepath.Join("..", "testdata", "standard_scenario", "input")
 	tempDir := t.TempDir()
 
-	if err := copyDir(sourceDir, tempDir); err != nil {
-		t.Fatalf("Failed to copy source: %v", err)
+	if err := copyDir(inputDir, tempDir); err != nil {
+		t.Fatalf("Failed to copy input: %v", err)
 	}
 
 	configPath := filepath.Join(tempDir, ".aidocs.yaml")
@@ -246,12 +246,12 @@ func TestGreenfieldGeneration(t *testing.T) {
 
 // TestBrownfieldGeneration tests re-generation on already processed files (idempotent).
 func TestBrownfieldGeneration(t *testing.T) {
-	// Copy source to temp directory
-	sourceDir := filepath.Join("..", "testdata", "blind", "source")
+	// Copy input to temp directory
+	inputDir := filepath.Join("..", "testdata", "standard_scenario", "input")
 	tempDir := t.TempDir()
 
-	if err := copyDir(sourceDir, tempDir); err != nil {
-		t.Fatalf("Failed to copy source: %v", err)
+	if err := copyDir(inputDir, tempDir); err != nil {
+		t.Fatalf("Failed to copy input: %v", err)
 	}
 
 	configPath := filepath.Join(tempDir, ".aidocs.yaml")
@@ -313,12 +313,12 @@ func TestBrownfieldGeneration(t *testing.T) {
 
 // TestCachePreservesState tests that cache correctly tracks file changes.
 func TestCachePreservesState(t *testing.T) {
-	// Copy source to temp directory
-	sourceDir := filepath.Join("..", "testdata", "blind", "source")
+	// Copy input to temp directory
+	inputDir := filepath.Join("..", "testdata", "standard_scenario", "input")
 	tempDir := t.TempDir()
 
-	if err := copyDir(sourceDir, tempDir); err != nil {
-		t.Fatalf("Failed to copy source: %v", err)
+	if err := copyDir(inputDir, tempDir); err != nil {
+		t.Fatalf("Failed to copy input: %v", err)
 	}
 
 	configPath := filepath.Join(tempDir, ".aidocs.yaml")
@@ -333,7 +333,7 @@ func TestCachePreservesState(t *testing.T) {
 		t.Fatalf("Failed to load cache: %v", err)
 	}
 
-	// Check all source files are in cache
+	// Check all input files are in cache
 	entries, _ := parser.ParseSummary(cfg.Content)
 	summaryDir := filepath.Dir(cfg.Content)
 
@@ -375,13 +375,13 @@ func TestCachePreservesState(t *testing.T) {
 
 // TestExpectedOutputComparison compares generated output with expected fixtures.
 func TestExpectedOutputComparison(t *testing.T) {
-	// Copy source to temp directory
-	sourceDir := filepath.Join("..", "testdata", "blind", "source")
-	expectedDir := filepath.Join("..", "testdata", "blind", "expected")
+	// Copy input to temp directory
+	inputDir := filepath.Join("..", "testdata", "standard_scenario", "input")
+	expectedDir := filepath.Join("..", "testdata", "standard_scenario", "expected")
 	tempDir := t.TempDir()
 
-	if err := copyDir(sourceDir, tempDir); err != nil {
-		t.Fatalf("Failed to copy source: %v", err)
+	if err := copyDir(inputDir, tempDir); err != nil {
+		t.Fatalf("Failed to copy input: %v", err)
 	}
 
 	configPath := filepath.Join(tempDir, ".aidocs.yaml")
@@ -907,12 +907,12 @@ func TestConfigDefaults(t *testing.T) {
 }
 
 func TestFrontmatterPreservedInOutput(t *testing.T) {
-	// Copy source to temp directory
-	sourceDir := filepath.Join("..", "testdata", "blind", "source")
+	// Copy input to temp directory
+	inputDir := filepath.Join("..", "testdata", "standard_scenario", "input")
 	tempDir := t.TempDir()
 
-	if err := copyDir(sourceDir, tempDir); err != nil {
-		t.Fatalf("Failed to copy source: %v", err)
+	if err := copyDir(inputDir, tempDir); err != nil {
+		t.Fatalf("Failed to copy input: %v", err)
 	}
 
 	configPath := filepath.Join(tempDir, ".aidocs.yaml")

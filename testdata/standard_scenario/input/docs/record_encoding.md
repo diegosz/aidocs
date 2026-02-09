@@ -17,6 +17,7 @@ The records use a compact binary encoding optimized for storage and transmission
 ## Field Layout
 
 Each record contains:
+
 - Header (fixed size)
 - Payload (variable size)
 - Signature (fixed size)
