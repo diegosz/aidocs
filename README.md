@@ -5,9 +5,9 @@ AI-Optimized Documentation Generator - A Go tool for generating LLM-friendly doc
 ## Features
 
 - **SUMMARY.md as Source of Truth**: Uses your existing SUMMARY.md to define document structure
-- **Manifest Generation**: Creates `manifest.json` with patterns, categories, and metadata
+- **Manifest Generation**: Creates `manifest.json` with documents, sections, and metadata
 - **llms.txt Generation**: Creates navigation files optimized for LLM discovery
-- **AI-Powered Summaries**: Optional AI-generated descriptions and tags via instructor-go
+- **AI-Powered Summaries**: Optional AI-generated descriptions and tags via Claude Code CLI
 - **Change Detection**: SHA256-based caching to only regenerate changed files
 - **Orphan Detection**: Find documentation files not referenced in SUMMARY.md
 
@@ -48,8 +48,9 @@ content: "docs/SUMMARY.md"
 output:
   llms_txt: "llms.txt"
   llms_full: "docs/llms-full.txt"
-  manifest: "docs/ai-optimization/manifest.json"
-  cache: "docs/ai-optimization/.cache.json"
+  manifest: "docs/_ai/manifest.json"
+  tags: "docs/_ai/tags.json"
+  cache: "docs/_ai/.cache.json"
 
 # AI features (uses Claude Code CLI - no API key needed)
 ai:
@@ -63,7 +64,6 @@ ai:
 project:
   name: "My Project"
   description: "Project description"
-  version: ""  # Empty = use git tag
   optimized_for:
     - "Claude Code"
     - "AI Agents"
@@ -84,18 +84,17 @@ Requirements:
 
 ### manifest.json
 
-Complete index of all patterns with metadata:
+Complete index of all documents with metadata:
 
 ```json
 {
   "knowledgeBase": {
     "name": "Project Name",
-    "version": "v1.0.0",
     "generatedBy": "aidocs",
     "optimizedFor": ["Claude Code", "AI Agents"]
   },
-  "patterns": [...],
-  "categories": {...},
+  "documents": [...],
+  "sections": {...},
   "metadata": {
     "totalDocuments": 10,
     "averageTokensPerDoc": 500
@@ -113,8 +112,12 @@ Root navigation file for AI agents:
 > Project description
 
 ## For AI Agents
-- Pattern Manifest: /docs/ai-optimization/manifest.json
+- Documents Manifest: /docs/_ai/manifest.json
+- Tags Index: /docs/_ai/tags.json
 - Full Index: /docs/llms-full.txt
+
+## Usage
+# (jq examples for querying manifest and tags)
 
 ## Documentation
 - [Getting Started](docs/start.md): Quick start guide
@@ -132,7 +135,7 @@ Documents can include YAML frontmatter:
 ---
 title: "Document Title"
 description: "One-line description"
-category: "reference"
+section: "reference"
 tags: ["topic1", "topic2"]
 estimatedTokens: 500
 ---
@@ -148,7 +151,7 @@ When AI features are enabled, missing frontmatter can be auto-generated.
 
 1. AI agent discovers project via `llms.txt` (~500 tokens)
 2. Agent loads `manifest.json` for full index (~2K tokens)
-3. Agent queries patterns by tags/categories
+3. Agent queries documents by tags/sections
 4. Agent fetches only relevant docs
 5. Result: ~4K tokens instead of loading all docs
 
