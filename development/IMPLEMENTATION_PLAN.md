@@ -160,24 +160,29 @@ Content starts here...
 
 **If missing:** `aidocs` can auto-generate frontmatter using LLM (when `ai.generate_missing_frontmatter: true`).
 
-### 3. SHA256 Change Detection
+### 3. SHA256 Change Detection (Two-Level)
 
-Hash is calculated on **content + H1 title, EXCLUDING frontmatter**:
+Uses two-level hashing for optimal performance:
+
+1. **fileHash** - Hash of entire file (quick check)
+2. **contentHash** - Hash excluding frontmatter (content change detection)
 
 ```go
-func contentHash(filePath string) string {
-    content := readFile(filePath)
-    // Remove frontmatter (between --- markers)
+func HasChanged(path string) bool {
+    // Quick check: compare full file hash first
+    if cached.FileHash == hashBytes(content) {
+        return false  // File unchanged, skip parsing
+    }
+    // File changed - check if actual content changed
     body := stripFrontmatter(content)
-    // Hash the body (includes H1 title)
-    return sha256(body)
+    return cached.ContentHash != hashBytes(body)
 }
 ```
 
-**Why exclude frontmatter?**
-- Frontmatter may be updated by aidocs (descriptions, tags)
-- Actual content changes should trigger regeneration
-- H1 title is part of content identity
+**Why two levels?**
+- Most files don't change between runs
+- fileHash avoids frontmatter parsing in common case
+- contentHash detects actual content changes (excludes frontmatter)
 
 ### 4. Orphan File Detection
 
@@ -337,8 +342,8 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
      "generatedAt": "2024-01-15T10:30:00Z",
      "files": {
        "docs/records.md": {
-         "contentHash": "a1b2c3d4...",
-         "frontmatterHash": "e5f6g7h8...",
+         "fileHash": "a1b2c3d4...",
+         "contentHash": "e5f6g7h8...",
          "summary": "Cached AI summary...",
          "generatedAt": "2024-01-15T10:30:00Z"
        }
@@ -640,7 +645,7 @@ blind/
 | Config file | `.aidocs.yaml` |
 | AI backend | Claude Code CLI (`claude -p`) - no API key needed |
 | Summaries | AI-generated (optional, cached) |
-| Change detection | SHA256 on content excluding frontmatter |
+| Change detection | Two-level SHA256 (fileHash + contentHash) |
 | Frontmatter | Auto-generated if missing (via Claude CLI) |
 | Orphan detection | `--show-orphans` flag |
 | Output format | manifest.json + tags.json + llms.txt + llms-full.txt |
@@ -729,7 +734,7 @@ gendocs: gendocsbook genaidocs
 - [x] JSON output uses "documents" instead of "patterns" (clearer naming)
 - [x] Removed version from manifest.json/llms-full.txt (not available at generation time)
 - [x] llms-full.txt generation
-- [x] SHA256 cache for change detection (excludes frontmatter)
+- [x] Two-level SHA256 cache (fileHash for quick check, contentHash excludes frontmatter)
 - [x] Auto-generated `.gitignore` in output directory (ignores `.cache.json`)
 - [x] Orphan file detection
 - [x] AI integration via Claude Code CLI (`claude -p`) - no API key needed
