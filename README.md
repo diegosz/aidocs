@@ -20,6 +20,9 @@ go install github.com/diegosz/aidocs/cmd/aidocs@latest
 ## Quick Start
 
 ```bash
+# Show version
+aidocs --version
+
 # Create default configuration
 aidocs --init
 

@@ -243,6 +243,7 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
        dryRun      = flag.Bool("dry-run", false, "Preview without writing")
        showOrphans = flag.Bool("show-orphans", false, "List files not in SUMMARY.md")
        init        = flag.Bool("init", false, "Create default .aidocs.yaml")
+       version     = flag.Bool("version", false, "Show version information")
    )
    ```
 
@@ -715,7 +716,7 @@ gendocs: gendocsbook genaidocs
 
 ### Completed ✓
 
-- [x] CLI with all planned flags (`--init`, `--force`, `--dry-run`, `--show-orphans`, `-v`)
+- [x] CLI with all planned flags (`--init`, `--force`, `--dry-run`, `--show-orphans`, `-v`, `--version`)
 - [x] Config parsing (`.aidocs.yaml`)
 - [x] SUMMARY.md parser with section detection
 - [x] Frontmatter extraction (reads existing, extracts H1 as fallback)
