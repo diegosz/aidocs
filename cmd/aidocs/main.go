@@ -53,9 +53,13 @@ func run() error {
 		fmt.Printf("Content source: %s\n", cfg.Content)
 	}
 
-	// Parse SUMMARY.md
+	// Parse SUMMARY.md - if missing, skip AI docs generation gracefully
 	entries, err := parser.ParseSummary(cfg.Content)
 	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Printf("No %s found - skipping AI docs optimization\n", cfg.Content)
+			return nil
+		}
 		return fmt.Errorf("parse summary: %w", err)
 	}
 
@@ -130,22 +134,28 @@ func run() error {
 			fm.Section = entry.Section
 		}
 
-		// Generate AI summaries if enabled and needed
+		// Generate AI metadata if enabled and needed
 		if cfg.AI.Enabled && needsProcess {
-			if cfg.AI.GenerateSummaries || cfg.AI.GenerateDescriptions || cfg.AI.GenerateTags {
+			// With --force: regenerate all enabled fields
+			// Without --force: only generate missing fields
+			needsDescription := cfg.AI.GenerateDescriptions && (*force || fm.Description == "")
+			needsTags := cfg.AI.GenerateTags && (*force || len(fm.Tags) == 0)
+			needsSummary := cfg.AI.GenerateSummaries && (*force || fm.Summary == "")
+
+			if needsDescription || needsTags || needsSummary {
 				meta, err := ai.GenerateMeta(body, fm.Title)
 				if err != nil {
 					if *verbose {
 						fmt.Printf("Warning: AI generation failed for %s: %v\n", docPath, err)
 					}
 				} else {
-					if cfg.AI.GenerateDescriptions && fm.Description == "" {
+					if needsDescription {
 						fm.Description = meta.Description
 					}
-					if cfg.AI.GenerateTags && len(fm.Tags) == 0 {
+					if needsTags {
 						fm.Tags = meta.Tags
 					}
-					if cfg.AI.GenerateSummaries {
+					if needsSummary {
 						fm.Summary = meta.Summary
 					}
 				}
