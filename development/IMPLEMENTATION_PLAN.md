@@ -89,6 +89,7 @@ project:
 - Looks for `docs/SUMMARY.md`
 - Generates `llms.txt` at project root
 - AI features disabled (fast mode)
+- If SUMMARY.md is missing: prints friendly message and exits cleanly (no error)
 
 ---
 
@@ -244,6 +245,11 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
        init        = flag.Bool("init", false, "Create default .aidocs.yaml")
    )
    ```
+
+   **AI generation behavior:**
+   - Normal run: Only generates missing fields (description, tags, summary)
+   - With `--force`: Regenerates all enabled fields, overwriting existing values
+   - AI is only called if at least one field needs generation (optimized)
 
 ### Phase 2: SUMMARY.md Parser
 
@@ -733,6 +739,9 @@ gendocs: gendocsbook genaidocs
 - [x] Test fixtures from blind repo
 - [x] Self-documentation (dogfooding): 6 docs in guide/reference categories
 - [x] Default output folder: `docs/_ai/` (shorter path)
+- [x] AI only called when fields need generation (optimized)
+- [x] `--force` regenerates all AI fields, normal run only fills missing
+- [x] Missing SUMMARY.md exits gracefully with friendly message
 
 ### Next Steps
 
