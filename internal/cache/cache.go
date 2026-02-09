@@ -21,9 +21,9 @@ type Cache struct {
 
 // FileCache stores cache data for a single file.
 type FileCache struct {
-	FileHash    string    `json:"fileHash"`              // Hash of entire file (quick check)
-	ContentHash string    `json:"contentHash"`           // Hash excluding frontmatter (content change detection)
-	Summary     string    `json:"summary,omitempty"`     // Cached AI summary
+	FileHash    string    `json:"fileHash"`          // Hash of entire file (quick check)
+	ContentHash string    `json:"contentHash"`       // Hash excluding frontmatter (content change detection)
+	Summary     string    `json:"summary,omitempty"` // Cached AI summary
 	GeneratedAt time.Time `json:"generatedAt"`
 }
 

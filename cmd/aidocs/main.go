@@ -16,13 +16,13 @@ import (
 )
 
 var (
-	configFile   = flag.String("config", ".aidocs.yaml", "Config file path")
-	force        = flag.Bool("force", false, "Regenerate all, ignore cache")
-	dryRun       = flag.Bool("dry-run", false, "Preview without writing")
-	showOrphans  = flag.Bool("show-orphans", false, "List files not in SUMMARY.md")
-	initConfig   = flag.Bool("init", false, "Create default .aidocs.yaml")
-	verbose      = flag.Bool("v", false, "Verbose output")
-	showVersion  = flag.Bool("version", false, "Show version information")
+	configFile  = flag.String("config", ".aidocs.yaml", "Config file path")
+	force       = flag.Bool("force", false, "Regenerate all, ignore cache")
+	dryRun      = flag.Bool("dry-run", false, "Preview without writing")
+	showOrphans = flag.Bool("show-orphans", false, "List files not in SUMMARY.md")
+	initConfig  = flag.Bool("init", false, "Create default .aidocs.yaml")
+	verbose     = flag.Bool("v", false, "Verbose output")
+	showVersion = flag.Bool("version", false, "Show version information")
 )
 
 func main() {
