@@ -4,9 +4,9 @@ content: "docs/SUMMARY.md"
 output:
   llms_txt: "llms.txt"
   llms_full: "docs/llms-full.txt"
-  manifest: "docs/ai-optimization/manifest.json"
-  tags: "docs/ai-optimization/tags.json"
-  cache: "docs/ai-optimization/.cache.json"
+  manifest: "docs/_ai/manifest.json"
+  tags: "docs/_ai/tags.json"
+  cache: "docs/_ai/.cache.json"
 
 # AI disabled for reproducible builds
 ai:
