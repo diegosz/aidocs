@@ -15,7 +15,6 @@ ai:
 project:
   name: "aidocs"
   description: "AI-optimized documentation generator for LLM-friendly discovery files"
-  version: ""
   optimized_for:
     - "Claude Code"
     - "AI Agents"

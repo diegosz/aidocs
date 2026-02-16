@@ -4,9 +4,7 @@ package config
 import (
 	"errors"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -45,8 +43,7 @@ type AIConfig struct {
 type ProjectConfig struct {
 	Name         string   `yaml:"name"`
 	Description  string   `yaml:"description"`
-	Version      string   `yaml:"version"`
-	OptimizedFor []string `yaml:"optimized_for"`
+OptimizedFor []string `yaml:"optimized_for"`
 }
 
 // DefaultConfig returns a configuration with sensible defaults.
@@ -70,7 +67,6 @@ func DefaultConfig() *Config {
 		Project: ProjectConfig{
 			Name:         "Project",
 			Description:  "",
-			Version:      "",
 			OptimizedFor: []string{"Claude Code", "AI Agents"},
 		},
 	}
@@ -110,11 +106,6 @@ func Load(path string) (*Config, error) {
 	cfg.Output.Tags = cfg.resolvePath(cfg.Output.Tags)
 	cfg.Output.Cache = cfg.resolvePath(cfg.Output.Cache)
 
-	// Get version from git if not specified
-	if cfg.Project.Version == "" {
-		cfg.Project.Version = getGitVersion()
-	}
-
 	// Validate
 	if err := cfg.Validate(); err != nil {
 		return nil, err
@@ -147,12 +138,3 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// getGitVersion attempts to get the version using git describe.
-func getGitVersion() string {
-	cmd := exec.Command("git", "describe", "--always", "--tags", "--match=v*")
-	output, err := cmd.Output()
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(output))
-}
