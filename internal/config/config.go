@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -43,7 +44,7 @@ type AIConfig struct {
 type ProjectConfig struct {
 	Name         string   `yaml:"name"`
 	Description  string   `yaml:"description"`
-OptimizedFor []string `yaml:"optimized_for"`
+	OptimizedFor []string `yaml:"optimized_for"`
 }
 
 // DefaultConfig returns a configuration with sensible defaults.
@@ -138,3 +139,11 @@ func (c *Config) Validate() error {
 	return nil
 }
 
+// ValidateProjectName checks that the project name is non-empty.
+// Called separately from Validate() since it runs after AI inference.
+func (c *Config) ValidateProjectName() error {
+	if strings.TrimSpace(c.Project.Name) == "" {
+		return errors.New("project.name is required: set it in .aidocs.yaml or enable ai to infer it")
+	}
+	return nil
+}

@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/diegosz/aidocs/internal/config"
-	"github.com/diegosz/aidocs/internal/parser"
+	"github.com/diegosz/aidocs/internal/docparser"
 )
 
 // Document represents a processed documentation file.
 type Document struct {
 	Path        string
-	Frontmatter *parser.Frontmatter
+	Frontmatter *docparser.Frontmatter
 	Section     string // From SUMMARY.md structure
 }
 

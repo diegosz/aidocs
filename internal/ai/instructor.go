@@ -38,12 +38,12 @@ Respond with ONLY a JSON object (no markdown, no explanation, no code fences) wi
 	return callClaudeCLI(context.Background(), prompt)
 }
 
-// callClaudeCLI uses the claude command-line tool to generate responses.
-func callClaudeCLI(ctx context.Context, prompt string) (*GeneratedMeta, error) {
+// callClaudeRaw calls the claude CLI and returns the raw output string.
+func callClaudeRaw(ctx context.Context, prompt string) (string, error) {
 	// Check if claude CLI is available
 	claudePath, err := exec.LookPath("claude")
 	if err != nil {
-		return nil, errors.New("claude CLI not found in PATH - install Claude Code or use 'ai.enabled: false'")
+		return "", errors.New("claude CLI not found in PATH - install Claude Code or use 'ai.enabled: false'")
 	}
 
 	// Run claude with --print flag for non-interactive mode
@@ -52,12 +52,21 @@ func callClaudeCLI(ctx context.Context, prompt string) (*GeneratedMeta, error) {
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
-			return nil, fmt.Errorf("claude CLI error: %s", string(exitErr.Stderr))
+			return "", fmt.Errorf("claude CLI error: %s", string(exitErr.Stderr))
 		}
-		return nil, fmt.Errorf("claude CLI failed: %w", err)
+		return "", fmt.Errorf("claude CLI failed: %w", err)
 	}
 
-	return parseMetaJSON(string(output))
+	return string(output), nil
+}
+
+// callClaudeCLI uses the claude command-line tool to generate responses.
+func callClaudeCLI(ctx context.Context, prompt string) (*GeneratedMeta, error) {
+	output, err := callClaudeRaw(ctx, prompt)
+	if err != nil {
+		return nil, err
+	}
+	return parseMetaJSON(output)
 }
 
 func parseMetaJSON(text string) (*GeneratedMeta, error) {
@@ -106,6 +115,44 @@ func extractJSON(text string) string {
 	}
 
 	return text
+}
+
+// GeneratedProjectInfo contains AI-inferred project metadata.
+type GeneratedProjectInfo struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+// InferProjectInfo uses the Claude CLI to infer project name and description
+// from SUMMARY.md content.
+func InferProjectInfo(summaryContent string) (*GeneratedProjectInfo, error) {
+	prompt := fmt.Sprintf(`Analyze this documentation table of contents (SUMMARY.md) and infer the project name and a short description.
+
+Content:
+%s
+
+Respond with ONLY a JSON object (no markdown, no explanation, no code fences) with these fields:
+- "name": the project name (concise, typically 1-3 words)
+- "description": one-line project description (max 120 chars)`, truncateContent(summaryContent, maxContentLength))
+
+	output, err := callClaudeRaw(context.Background(), prompt)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseProjectInfoJSON(output)
+}
+
+func parseProjectInfoJSON(text string) (*GeneratedProjectInfo, error) {
+	text = strings.TrimSpace(text)
+	text = extractJSON(text)
+
+	var info GeneratedProjectInfo
+	if err := json.Unmarshal([]byte(text), &info); err != nil {
+		return nil, fmt.Errorf("failed to parse AI response as JSON: %w\nResponse was: %s", err, text)
+	}
+
+	return &info, nil
 }
 
 // truncateContent limits content size to avoid overwhelming the LLM.

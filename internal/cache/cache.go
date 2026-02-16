@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/diegosz/aidocs/internal/parser"
+	"github.com/diegosz/aidocs/internal/docparser"
 )
 
 // Cache stores hashes and metadata for processed files.
@@ -102,7 +102,7 @@ func (c *Cache) HasChanged(path string) (bool, error) {
 	}
 
 	// File changed - check if actual content (excluding frontmatter) changed
-	body := parser.StripFrontmatter(content)
+	body := docparser.StripFrontmatter(content)
 	contentHash := hashBytes(body)
 
 	return cached.ContentHash != contentHash, nil
@@ -121,7 +121,7 @@ func (c *Cache) Update(path, summary string) error {
 	}
 
 	fileHash := hashBytes(content)
-	body := parser.StripFrontmatter(content)
+	body := docparser.StripFrontmatter(content)
 	contentHash := hashBytes(body)
 
 	c.Files[absPath] = &FileCache{
@@ -151,7 +151,7 @@ func ContentHash(path string) (string, error) {
 	}
 
 	// Strip frontmatter - we only hash the body content
-	body := parser.StripFrontmatter(content)
+	body := docparser.StripFrontmatter(content)
 	return hashBytes(body), nil
 }
 

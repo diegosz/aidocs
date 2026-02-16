@@ -7,12 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strings"
 
 	"github.com/diegosz/aidocs/internal/ai"
 	"github.com/diegosz/aidocs/internal/cache"
 	"github.com/diegosz/aidocs/internal/config"
 	"github.com/diegosz/aidocs/internal/generator"
-	"github.com/diegosz/aidocs/internal/parser"
+	"github.com/diegosz/aidocs/internal/docparser"
 )
 
 var (
@@ -61,7 +62,7 @@ func run() error {
 	}
 
 	// Parse SUMMARY.md - if missing, skip AI docs generation gracefully
-	entries, err := parser.ParseSummary(cfg.Content)
+	entries, err := docparser.ParseSummary(cfg.Content)
 	if err != nil {
 		if os.IsNotExist(err) {
 			fmt.Printf("No %s found - skipping AI docs optimization\n", cfg.Content)
@@ -74,9 +75,40 @@ func run() error {
 		fmt.Printf("Found %d entries in SUMMARY.md\n", len(entries))
 	}
 
+	// Infer project metadata from SUMMARY.md if needed
+	if cfg.AI.Enabled {
+		needsName := strings.TrimSpace(cfg.Project.Name) == "" || cfg.Project.Name == "Project"
+		needsDesc := strings.TrimSpace(cfg.Project.Description) == ""
+		if needsName || needsDesc {
+			summaryContent, readErr := os.ReadFile(cfg.Content)
+			if readErr == nil {
+				info, inferErr := ai.InferProjectInfo(string(summaryContent))
+				if inferErr != nil {
+					if *verbose {
+						fmt.Printf("Warning: AI project inference failed: %v\n", inferErr)
+					}
+				} else {
+					if needsName && strings.TrimSpace(info.Name) != "" {
+						cfg.Project.Name = info.Name
+					}
+					if needsDesc && strings.TrimSpace(info.Description) != "" {
+						cfg.Project.Description = info.Description
+					}
+				}
+			} else if *verbose {
+				fmt.Printf("Warning: could not read SUMMARY.md for project inference: %v\n", readErr)
+			}
+		}
+	}
+
+	// Validate project name after AI inference attempt
+	if err := cfg.ValidateProjectName(); err != nil {
+		return err
+	}
+
 	// Check for orphan files if requested
 	if *showOrphans {
-		orphans, err := parser.FindOrphans(cfg.Content, entries)
+		orphans, err := docparser.FindOrphans(cfg.Content, entries)
 		if err != nil {
 			return fmt.Errorf("find orphans: %w", err)
 		}
@@ -125,7 +157,7 @@ func run() error {
 		}
 
 		// Extract or generate frontmatter
-		fm, body, err := parser.ExtractFrontmatter(docPath)
+		fm, body, err := docparser.ExtractFrontmatter(docPath)
 		if err != nil {
 			fmt.Printf("Warning: skipping %s: %v\n", docPath, err)
 			continue
@@ -170,7 +202,7 @@ func run() error {
 
 			// Update frontmatter in file if configured
 			if cfg.AI.GenerateMissingFrontmatter {
-				if err := parser.WriteFrontmatter(docPath, fm, body, *dryRun); err != nil {
+				if err := docparser.WriteFrontmatter(docPath, fm, body, *dryRun); err != nil {
 					fmt.Printf("Warning: could not update frontmatter in %s: %v\n", docPath, err)
 				} else if *verbose && !*dryRun {
 					fmt.Printf("Updated frontmatter: %s\n", docPath)

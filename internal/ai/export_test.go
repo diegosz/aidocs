@@ -16,3 +16,8 @@ func ExtractJSONForTest(text string) string {
 func TruncateContentForTest(content string, maxLen int) string {
 	return truncateContent(content, maxLen)
 }
+
+// ParseProjectInfoJSONForTest exposes parseProjectInfoJSON for testing.
+func ParseProjectInfoJSONForTest(text string) (*GeneratedProjectInfo, error) {
+	return parseProjectInfoJSON(text)
+}

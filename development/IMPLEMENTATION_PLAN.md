@@ -225,8 +225,8 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
    ├── cmd/aidocs/main.go         # CLI entry point
    ├── internal/
    │   ├── config/config.go       # Parse .aidocs.yaml
-   │   ├── parser/summary.go      # Parse SUMMARY.md structure
-   │   ├── parser/frontmatter.go  # Extract/generate frontmatter
+   │   ├── docparser/summary.go      # Parse SUMMARY.md structure
+   │   ├── docparser/frontmatter.go  # Extract/generate frontmatter
    │   ├── generator/manifest.go  # Generate manifest.json
    │   ├── generator/tags.go      # Generate tags.json
    │   ├── generator/llmstxt.go   # Generate llms.txt, llms-full.txt
@@ -502,6 +502,9 @@ If `llms.txt` doesn't exist at project root, aidocs generates a default:
     | `TestClaudeCLIIntegration` | Real Claude CLI call (skipped if not installed) |
     | `TestFrontmatterSpacingIdempotent` | Running --force twice produces identical output |
     | `TestFrontmatterSpacingWithExistingNewlines` | Leading whitespace variations handled correctly |
+    | `TestParseProjectInfoJSON` | Parse project info JSON from various Claude response formats |
+    | `TestInferProjectInfoIntegration` | Real Claude CLI call for project inference (skipped if not installed) |
+    | `TestProjectNameValidation` | Validate project.name is non-empty after inference |
 
 15. **Run tests:**
     ```bash
@@ -541,7 +544,7 @@ aidocs/                              # NEW REPOSITORY
 ├── internal/
 │   ├── config/
 │   │   └── config.go                # Parse .aidocs.yaml
-│   ├── parser/
+│   ├── docparser/
 │   │   ├── summary.go               # Parse SUMMARY.md structure
 │   │   └── frontmatter.go           # Extract/validate/generate frontmatter
 │   ├── generator/
@@ -748,6 +751,9 @@ gendocs: gendocsbook genaidocs
 - [x] AI only called when fields need generation (optimized)
 - [x] `--force` regenerates all AI fields, normal run only fills missing
 - [x] Missing SUMMARY.md exits gracefully with friendly message
+- [x] AI-inferred project metadata (name/description from SUMMARY.md when empty or default)
+- [x] Post-inference `ValidateProjectName()` — errors if project.name is still empty
+- [x] Refactored `callClaudeRaw()` for reuse across meta generation and project inference
 
 ### Next Steps
 

@@ -1,5 +1,5 @@
-// Package parser provides parsing utilities for SUMMARY.md and markdown frontmatter.
-package parser
+// Package docparser provides parsing utilities for SUMMARY.md and markdown frontmatter.
+package docparser
 
 import (
 	"bufio"

@@ -12,8 +12,8 @@ import (
 
 	"github.com/diegosz/aidocs/internal/cache"
 	"github.com/diegosz/aidocs/internal/config"
+	"github.com/diegosz/aidocs/internal/docparser"
 	"github.com/diegosz/aidocs/internal/generator"
-	"github.com/diegosz/aidocs/internal/parser"
 )
 
 // copyDir recursively copies a directory.
@@ -59,7 +59,7 @@ func runAidocs(t *testing.T, configPath string) ([]*generator.Document, *config.
 		t.Fatalf("Failed to load config: %v", err)
 	}
 
-	entries, err := parser.ParseSummary(cfg.Content)
+	entries, err := docparser.ParseSummary(cfg.Content)
 	if err != nil {
 		t.Fatalf("Failed to parse SUMMARY.md: %v", err)
 	}
@@ -70,7 +70,7 @@ func runAidocs(t *testing.T, configPath string) ([]*generator.Document, *config.
 	for _, entry := range entries {
 		docPath := filepath.Join(summaryDir, entry.Path)
 
-		fm, _, err := parser.ExtractFrontmatter(docPath)
+		fm, _, err := docparser.ExtractFrontmatter(docPath)
 		if err != nil {
 			t.Errorf("Failed to extract frontmatter from %s: %v", docPath, err)
 			continue
@@ -334,7 +334,7 @@ func TestCachePreservesState(t *testing.T) {
 	}
 
 	// Check all input files are in cache
-	entries, _ := parser.ParseSummary(cfg.Content)
+	entries, _ := docparser.ParseSummary(cfg.Content)
 	summaryDir := filepath.Dir(cfg.Content)
 
 	for _, entry := range entries {
@@ -610,8 +610,8 @@ func TestOrphanDetection(t *testing.T) {
 		t.Fatalf("Failed to write orphan.md: %v", err)
 	}
 
-	entries, _ := parser.ParseSummary(summaryPath)
-	orphans, err := parser.FindOrphans(summaryPath, entries)
+	entries, _ := docparser.ParseSummary(summaryPath)
+	orphans, err := docparser.FindOrphans(summaryPath, entries)
 	if err != nil {
 		t.Fatalf("FindOrphans failed: %v", err)
 	}
@@ -677,7 +677,7 @@ Some content without H1.`,
 				t.Fatalf("Failed to write test file: %v", err)
 			}
 
-			fm, body, err := parser.ExtractFrontmatter(testFile)
+			fm, body, err := docparser.ExtractFrontmatter(testFile)
 			if tc.expectedHasErr {
 				if err == nil {
 					t.Error("Expected error but got none")
@@ -720,14 +720,14 @@ This is the content.`
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
-	fm := &parser.Frontmatter{
+	fm := &docparser.Frontmatter{
 		Title:       "Test Document",
 		Description: "A test description",
 		Tags:        []string{"test", "example"},
 	}
 
 	// First write
-	if err := parser.WriteFrontmatter(testFile, fm, originalContent, false); err != nil {
+	if err := docparser.WriteFrontmatter(testFile, fm, originalContent, false); err != nil {
 		t.Fatalf("First WriteFrontmatter failed: %v", err)
 	}
 
@@ -737,12 +737,12 @@ This is the content.`
 	}
 
 	// Extract body and write again (simulates running --force twice)
-	_, body, err := parser.ExtractFrontmatter(testFile)
+	_, body, err := docparser.ExtractFrontmatter(testFile)
 	if err != nil {
 		t.Fatalf("ExtractFrontmatter failed: %v", err)
 	}
 
-	if err := parser.WriteFrontmatter(testFile, fm, body, false); err != nil {
+	if err := docparser.WriteFrontmatter(testFile, fm, body, false); err != nil {
 		t.Fatalf("Second WriteFrontmatter failed: %v", err)
 	}
 
@@ -806,12 +806,12 @@ func TestFrontmatterSpacingWithExistingNewlines(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			testFile := filepath.Join(tempDir, tc.name+".md")
 
-			fm := &parser.Frontmatter{
+			fm := &docparser.Frontmatter{
 				Title:       "Title",
 				Description: "Description",
 			}
 
-			if err := parser.WriteFrontmatter(testFile, fm, tc.body, false); err != nil {
+			if err := docparser.WriteFrontmatter(testFile, fm, tc.body, false); err != nil {
 				t.Fatalf("WriteFrontmatter failed: %v", err)
 			}
 
@@ -821,7 +821,7 @@ func TestFrontmatterSpacingWithExistingNewlines(t *testing.T) {
 			}
 
 			// Extract body from written content
-			_, extractedBody, err := parser.ExtractFrontmatter(testFile)
+			_, extractedBody, err := docparser.ExtractFrontmatter(testFile)
 			if err != nil {
 				t.Fatalf("ExtractFrontmatter failed: %v", err)
 			}
@@ -858,7 +858,7 @@ func TestSummaryParsing(t *testing.T) {
 		t.Fatalf("Failed to write SUMMARY.md: %v", err)
 	}
 
-	entries, err := parser.ParseSummary(summaryPath)
+	entries, err := docparser.ParseSummary(summaryPath)
 	if err != nil {
 		t.Fatalf("ParseSummary failed: %v", err)
 	}
@@ -883,6 +883,34 @@ func TestSummaryParsing(t *testing.T) {
 		if e.Path == "" {
 			t.Errorf("Entry '%s' has empty path", e.Title)
 		}
+	}
+}
+
+func TestProjectNameValidation(t *testing.T) {
+	tests := []struct {
+		name     string
+		projName string
+		wantErr  bool
+	}{
+		{name: "empty string", projName: "", wantErr: true},
+		{name: "whitespace only", projName: "   ", wantErr: true},
+		{name: "tabs and spaces", projName: "\t  \t", wantErr: true},
+		{name: "valid name", projName: "My Project", wantErr: false},
+		{name: "single word", projName: "Aidocs", wantErr: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := config.DefaultConfig()
+			cfg.Project.Name = tt.projName
+			err := cfg.ValidateProjectName()
+			if tt.wantErr && err == nil {
+				t.Error("expected error, got nil")
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
 	}
 }
 

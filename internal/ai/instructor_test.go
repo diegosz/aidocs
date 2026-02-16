@@ -148,6 +148,101 @@ func TestTruncateContent(t *testing.T) {
 	}
 }
 
+func TestParseProjectInfoJSON(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		wantName string
+		wantDesc string
+		wantErr  bool
+	}{
+		{
+			name:     "clean JSON",
+			input:    `{"name": "BlindEngine", "description": "Privacy-preserving data storage engine"}`,
+			wantName: "BlindEngine",
+			wantDesc: "Privacy-preserving data storage engine",
+		},
+		{
+			name:     "JSON with markdown code fence",
+			input:    "```json\n{\"name\": \"MyProject\", \"description\": \"A cool project\"}\n```",
+			wantName: "MyProject",
+			wantDesc: "A cool project",
+		},
+		{
+			name:     "JSON with surrounding text",
+			input:    "Here is the info:\n{\"name\": \"TestProj\", \"description\": \"Testing\"}\nDone!",
+			wantName: "TestProj",
+			wantDesc: "Testing",
+		},
+		{
+			name:    "invalid JSON",
+			input:   "not json at all",
+			wantErr: true,
+		},
+		{
+			name:    "empty input",
+			input:   "",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			info, err := ai.ParseProjectInfoJSONForTest(tt.input)
+			if tt.wantErr {
+				if err == nil {
+					t.Error("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if info.Name != tt.wantName {
+				t.Errorf("name = %q, want %q", info.Name, tt.wantName)
+			}
+			if info.Description != tt.wantDesc {
+				t.Errorf("description = %q, want %q", info.Description, tt.wantDesc)
+			}
+		})
+	}
+}
+
+// TestInferProjectInfoIntegration tests actual Claude CLI calls for project inference.
+// Skip if claude is not installed.
+func TestInferProjectInfoIntegration(t *testing.T) {
+	_, err := exec.LookPath("claude")
+	if err != nil {
+		t.Skip("claude CLI not installed, skipping integration test")
+	}
+
+	summaryContent := `# Blind Records
+
+- [Introduction](intro.md)
+- [Core Concepts](concepts.md)
+- Storage
+  - [Encryption](storage/encryption.md)
+  - [Key Derivation](storage/keys.md)
+- [API Reference](api.md)
+`
+
+	info, err := ai.InferProjectInfo(summaryContent)
+	if err != nil {
+		t.Fatalf("InferProjectInfo failed: %v", err)
+	}
+
+	if info.Name == "" {
+		t.Error("expected non-empty name")
+	}
+	if info.Description == "" {
+		t.Error("expected non-empty description")
+	}
+
+	t.Logf("AI Inferred project info:")
+	t.Logf("  Name: %s", info.Name)
+	t.Logf("  Description: %s", info.Description)
+}
+
 // TestClaudeCLIIntegration tests actual Claude CLI calls.
 // Skip if claude is not installed.
 func TestClaudeCLIIntegration(t *testing.T) {
