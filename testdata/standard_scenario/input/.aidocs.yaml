@@ -15,7 +15,6 @@ ai:
 project:
   name: "Blind Record System"
   description: "Secure record management with blind encryption"
-  version: "v0.4.96"
   optimized_for:
     - "Claude Code"
     - "BMAD BMM"
