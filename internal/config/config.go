@@ -147,3 +147,78 @@ func (c *Config) ValidateProjectName() error {
 	}
 	return nil
 }
+
+// SaveProjectFields updates the project.name and/or project.description fields
+// in the config file, preserving comments and formatting.
+// Pass empty string for fields that should not be updated.
+func SaveProjectFields(path, name, description string) error {
+	if name == "" && description == "" {
+		return nil
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	var doc yaml.Node
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return err
+	}
+
+	if doc.Kind != yaml.DocumentNode || len(doc.Content) == 0 {
+		return errors.New("invalid YAML structure")
+	}
+
+	root := doc.Content[0]
+	if root.Kind != yaml.MappingNode {
+		return errors.New("expected mapping at root")
+	}
+
+	projectNode := findMapValue(root, "project")
+	if projectNode == nil {
+		return errors.New("project section not found in config")
+	}
+	if projectNode.Kind != yaml.MappingNode {
+		return errors.New("project section is not a mapping")
+	}
+
+	if name != "" {
+		setMapValue(projectNode, "name", name)
+	}
+	if description != "" {
+		setMapValue(projectNode, "description", description)
+	}
+
+	out, err := yaml.Marshal(&doc)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, out, 0o600)
+}
+
+// findMapValue finds the value node for a given key in a mapping node.
+func findMapValue(mapping *yaml.Node, key string) *yaml.Node {
+	for i := 0; i < len(mapping.Content)-1; i += 2 {
+		if mapping.Content[i].Value == key {
+			return mapping.Content[i+1]
+		}
+	}
+	return nil
+}
+
+// setMapValue sets or adds a scalar value for a key in a mapping node.
+func setMapValue(mapping *yaml.Node, key, value string) {
+	for i := 0; i < len(mapping.Content)-1; i += 2 {
+		if mapping.Content[i].Value == key {
+			mapping.Content[i+1].Value = value
+			return
+		}
+	}
+	// Key doesn't exist, add it
+	mapping.Content = append(mapping.Content,
+		&yaml.Node{Kind: yaml.ScalarNode, Value: key},
+		&yaml.Node{Kind: yaml.ScalarNode, Value: value, Style: yaml.DoubleQuotedStyle},
+	)
+}

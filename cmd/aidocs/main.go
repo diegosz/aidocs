@@ -88,11 +88,25 @@ func run() error {
 						fmt.Printf("Warning: AI project inference failed: %v\n", inferErr)
 					}
 				} else {
+					saveName := ""
+					saveDesc := ""
 					if needsName && strings.TrimSpace(info.Name) != "" {
 						cfg.Project.Name = info.Name
+						saveName = info.Name
 					}
 					if needsDesc && strings.TrimSpace(info.Description) != "" {
 						cfg.Project.Description = info.Description
+						saveDesc = info.Description
+					}
+					// Persist inferred values back to config file
+					if !*dryRun && (saveName != "" || saveDesc != "") {
+						if err := config.SaveProjectFields(*configFile, saveName, saveDesc); err != nil {
+							if *verbose {
+								fmt.Printf("Warning: could not save inferred project metadata: %v\n", err)
+							}
+						} else {
+							fmt.Println("Saved inferred project metadata to config file")
+						}
 					}
 				}
 			} else if *verbose {
