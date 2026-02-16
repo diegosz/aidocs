@@ -79,8 +79,10 @@ When `ai.enabled: true`, aidocs uses **Claude Code CLI** (`claude -p`) for AI-po
 - No API key required - uses your existing Claude Code authentication
 - Generates summaries, descriptions, and tags for documents
 - Can auto-generate missing frontmatter
+- Infers `project.name` and `project.description` from SUMMARY.md when either is left empty (`""`) in `.aidocs.yaml`
 
 Requirements:
+
 - Claude Code CLI installed and authenticated (`claude` command available in PATH)
 
 ## Output Files
